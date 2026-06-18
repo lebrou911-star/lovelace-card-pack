@@ -1,0 +1,15 @@
+{
+  "name": "lovelace-card-pack",
+  "version": "0.1.0",
+  "description": "A pack of custom Lovelace cards for Home Assistant, bundled into a single JS file and installable in one shot via HACS.",
+  "type": "module",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "build": "node build.mjs",
+    "watch": "node build.mjs --watch"
+  },
+  "devDependencies": {
+    "esbuild": "^0.21.5"
+  }
+}

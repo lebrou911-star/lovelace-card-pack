@@ -1,0 +1,6 @@
+node_modules/
+*.log
+.DS_Store
+
+# NOTE: dist/ is intentionally NOT ignored — HACS serves the committed bundle.
+_vendor/
