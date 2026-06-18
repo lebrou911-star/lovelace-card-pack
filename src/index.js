@@ -7,7 +7,7 @@
 // To add a card to the pack, drop it under src/<card-name>/ and add a
 // side-effect import below.
 
-// (cards are wired in as they are added to the pack)
+import "./expander-card/expander-card.js";
 
 // __PACK_VERSION__ is replaced at build time (see build.mjs).
 const VERSION = typeof __PACK_VERSION__ !== "undefined" ? __PACK_VERSION__ : "dev";
