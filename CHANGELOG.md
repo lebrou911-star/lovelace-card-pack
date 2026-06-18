@@ -3,6 +3,15 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.1.2] - 2024-06-18
+
+### Fixed
+- `minimalistic-area-card-plus`: the bottom action-icon row now follows the
+  entity order from the config/editor. The upstream card rendered all
+  "dialog" entities before all "toggle" entities, so reordering a toggle
+  (light, switch…) ahead of a dialog had no visible effect. Sensors (top row)
+  already followed config order.
+
 ## [0.1.1] - 2024-06-18
 
 ### Fixed
@@ -31,5 +40,6 @@ one shot via HACS.
   - alignment controls for the bottom sensor row so text-valued states
     (e.g. `idle`) stay aligned with numeric ones.
 
+[0.1.2]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.1.2
 [0.1.1]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.1.1
 [0.1.0]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.1.0

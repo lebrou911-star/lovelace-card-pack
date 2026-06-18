@@ -228,9 +228,11 @@ class MinimalisticAreaCardPlus extends HTMLElement {
   }
 
   _classifyEntities() {
-    const dialog = [];
-    const toggle = [];
     const sensor = [];
+    // Actionable entities keep their original config order (the `dialog` flag
+    // only selects the default tap action). The upstream card split these into
+    // dialog-then-toggle groups, which ignored the user's ordering.
+    const buttons = [];
     const entities = (this._config && this._config.entities) || this._areaEntities || [];
     for (const item of entities) {
       const entity = this._parseEntity(item);
@@ -238,21 +240,20 @@ class MinimalisticAreaCardPlus extends HTMLElement {
       const domain = entity.entity.split(".")[0];
       if (SENSORS.indexOf(domain) !== -1 || entity.attribute) {
         sensor.push(entity);
-      } else if (this._config.force_dialog || DOMAINS_TOGGLE.indexOf(domain) === -1) {
-        dialog.push(entity);
       } else {
-        toggle.push(entity);
+        const dialog = this._config.force_dialog || DOMAINS_TOGGLE.indexOf(domain) === -1;
+        buttons.push({ conf: entity, dialog });
       }
     }
-    return { dialog, toggle, sensor };
+    return { sensor, buttons };
   }
 
   _shouldUpdate(oldHass) {
     if (!oldHass) return true;
     if (oldHass.themes !== this._hass.themes || oldHass.locale !== this._hass.locale) return true;
     this._setArea();
-    const { dialog, toggle, sensor } = this._classifyEntities();
-    for (const e of [...dialog, ...toggle, ...sensor]) {
+    const { sensor, buttons } = this._classifyEntities();
+    for (const e of [...sensor, ...buttons.map((b) => b.conf)]) {
       if (oldHass.states[e.entity] !== this._hass.states[e.entity]) return true;
     }
     // Area picture / config-driven look may also depend on areas.
@@ -296,7 +297,7 @@ class MinimalisticAreaCardPlus extends HTMLElement {
       }
     }
 
-    const { dialog, toggle, sensor } = this._classifyEntities();
+    const { sensor, buttons } = this._classifyEntities();
 
     // Alignment options (the "plus" feature).
     const itemAlign = ITEM_ALIGN[cfg.item_align] || ITEM_ALIGN.middle;
@@ -346,17 +347,13 @@ class MinimalisticAreaCardPlus extends HTMLElement {
     });
     box.appendChild(sensorsEl);
 
-    const buttons = document.createElement("div");
-    buttons.className = "buttons";
-    dialog.forEach((conf) => {
-      const node = this._renderEntity(conf, true, false, {});
-      if (node) buttons.appendChild(node);
+    const buttonsEl = document.createElement("div");
+    buttonsEl.className = "buttons";
+    buttons.forEach(({ conf, dialog }) => {
+      const node = this._renderEntity(conf, dialog, false, {});
+      if (node) buttonsEl.appendChild(node);
     });
-    toggle.forEach((conf) => {
-      const node = this._renderEntity(conf, false, false, {});
-      if (node) buttons.appendChild(node);
-    });
-    box.appendChild(buttons);
+    box.appendChild(buttonsEl);
 
     this._card.appendChild(box);
   }

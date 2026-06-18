@@ -1,4 +1,4 @@
-/*! lovelace-card-pack v0.1.1 | https://github.com/lebrou911-star/lovelace-card-pack */
+/*! lovelace-card-pack v0.1.2 | https://github.com/lebrou911-star/lovelace-card-pack */
 (() => {
   var __defProp = Object.defineProperty;
   var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
@@ -1167,7 +1167,7 @@
   };
 
   // src/minimalistic-area-card-plus/minimalistic-area-card-plus.js
-  var VERSION2 = true ? "0.1.1" : "dev";
+  var VERSION2 = true ? "0.1.2" : "dev";
   var CARD_TYPE = "minimalistic-area-card-plus";
   var EDITOR_TYPE = "minimalistic-area-card-plus-editor";
   var UNAVAILABLE = "unavailable";
@@ -1340,9 +1340,8 @@
       return typeof item === "string" ? { entity: item } : item;
     }
     _classifyEntities() {
-      const dialog = [];
-      const toggle = [];
       const sensor = [];
+      const buttons = [];
       const entities = this._config && this._config.entities || this._areaEntities || [];
       for (const item of entities) {
         const entity = this._parseEntity(item);
@@ -1350,20 +1349,19 @@
         const domain = entity.entity.split(".")[0];
         if (SENSORS.indexOf(domain) !== -1 || entity.attribute) {
           sensor.push(entity);
-        } else if (this._config.force_dialog || DOMAINS_TOGGLE.indexOf(domain) === -1) {
-          dialog.push(entity);
         } else {
-          toggle.push(entity);
+          const dialog = this._config.force_dialog || DOMAINS_TOGGLE.indexOf(domain) === -1;
+          buttons.push({ conf: entity, dialog });
         }
       }
-      return { dialog, toggle, sensor };
+      return { sensor, buttons };
     }
     _shouldUpdate(oldHass) {
       if (!oldHass) return true;
       if (oldHass.themes !== this._hass.themes || oldHass.locale !== this._hass.locale) return true;
       this._setArea();
-      const { dialog, toggle, sensor } = this._classifyEntities();
-      for (const e of [...dialog, ...toggle, ...sensor]) {
+      const { sensor, buttons } = this._classifyEntities();
+      for (const e of [...sensor, ...buttons.map((b) => b.conf)]) {
         if (oldHass.states[e.entity] !== this._hass.states[e.entity]) return true;
       }
       if (this._config.area && oldHass.areas !== this._hass.areas) return true;
@@ -1398,7 +1396,7 @@
           imageUrl = cfg.image || ((_d = this._area) == null ? void 0 : _d.picture);
         }
       }
-      const { dialog, toggle, sensor } = this._classifyEntities();
+      const { sensor, buttons } = this._classifyEntities();
       const itemAlign = ITEM_ALIGN[cfg.item_align] || ITEM_ALIGN.middle;
       const valueJustify = VALUE_JUSTIFY[cfg.value_justify] || VALUE_JUSTIFY.start;
       const valueWrap = cfg.value_wrap === "nowrap";
@@ -1439,17 +1437,13 @@
         if (node) sensorsEl.appendChild(node);
       });
       box.appendChild(sensorsEl);
-      const buttons = document.createElement("div");
-      buttons.className = "buttons";
-      dialog.forEach((conf) => {
-        const node = this._renderEntity(conf, true, false, {});
-        if (node) buttons.appendChild(node);
+      const buttonsEl = document.createElement("div");
+      buttonsEl.className = "buttons";
+      buttons.forEach(({ conf, dialog }) => {
+        const node = this._renderEntity(conf, dialog, false, {});
+        if (node) buttonsEl.appendChild(node);
       });
-      toggle.forEach((conf) => {
-        const node = this._renderEntity(conf, false, false, {});
-        if (node) buttons.appendChild(node);
-      });
-      box.appendChild(buttons);
+      box.appendChild(buttonsEl);
       this._card.appendChild(box);
     }
     _renderEntity(entityConf, dialog, isSensor, align) {
@@ -1711,7 +1705,7 @@
   );
 
   // src/index.js
-  var VERSION3 = true ? "0.1.1" : "dev";
+  var VERSION3 = true ? "0.1.2" : "dev";
   console.info(
     `%c LOVELACE-CARD-PACK %c v${VERSION3} `,
     "color: white; background: #6d28d9; font-weight: 700; border-radius: 3px 0 0 3px;",
