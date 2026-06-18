@@ -628,14 +628,16 @@ if (!customElements.get(EDITOR_TYPE)) {
 }
 
 window.customCards = window.customCards || [];
-window.customCards.push({
-  type: CARD_TYPE,
-  name: "Minimalistic Area Card Plus",
-  description:
-    "Minimalistic area card with a visual editor and alignment controls for the bottom sensor row. Fork of junalmeida's Minimalistic Area Card.",
-  preview: true,
-  documentationURL: "https://github.com/lebrou911-star/lovelace-card-pack",
-});
+if (!window.customCards.some((c) => c.type === CARD_TYPE)) {
+  window.customCards.push({
+    type: CARD_TYPE,
+    name: "Minimalistic Area Card Plus",
+    description:
+      "Minimalistic area card with a visual editor and alignment controls for the bottom sensor row. Fork of junalmeida's Minimalistic Area Card.",
+    preview: true,
+    documentationURL: "https://github.com/lebrou911-star/lovelace-card-pack",
+  });
+}
 
 console.info(
   `%c MINIMALISTIC-AREA-CARD-PLUS %c v${VERSION} `,

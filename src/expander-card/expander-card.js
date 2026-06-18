@@ -407,7 +407,18 @@ class ExpanderCard extends HTMLElement {
   }
 }
 
-customElements.define("expander-card", ExpanderCard);
+// Guard the registration: if another resource (e.g. the old standalone
+// Expander Card) already defined this element, defining it again throws and
+// would abort the rest of the pack bundle. Warn instead so the other cards in
+// the pack still register.
+if (customElements.get("expander-card")) {
+  console.warn(
+    "[lovelace-card-pack] 'expander-card' is already registered by another resource. " +
+      "Remove the standalone Expander Card HACS resource to use the one bundled in the pack."
+  );
+} else {
+  customElements.define("expander-card", ExpanderCard);
+}
 
 /* ------------------------------------------------------------------ *
  * Visual editor (Home Assistant GUI)
@@ -885,16 +896,20 @@ class ExpanderCardEditor extends HTMLElement {
   }
 }
 
-customElements.define("expander-card-editor", ExpanderCardEditor);
+if (!customElements.get("expander-card-editor")) {
+  customElements.define("expander-card-editor", ExpanderCardEditor);
+}
 
 window.customCards = window.customCards || [];
-window.customCards.push({
-  type: "expander-card",
-  name: "Expander Card",
-  description: "A header card that slides open to reveal child cards underneath.",
-  preview: true,
-  documentationURL: "https://github.com/lebrou911-star/lovelace-card-pack",
-});
+if (!window.customCards.some((c) => c.type === "expander-card")) {
+  window.customCards.push({
+    type: "expander-card",
+    name: "Expander Card",
+    description: "A header card that slides open to reveal child cards underneath.",
+    preview: true,
+    documentationURL: "https://github.com/lebrou911-star/lovelace-card-pack",
+  });
+}
 
 console.info(
   `%c EXPANDER-CARD %c v${VERSION} `,

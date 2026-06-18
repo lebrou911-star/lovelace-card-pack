@@ -1,4 +1,4 @@
-/*! lovelace-card-pack v0.1.0 | https://github.com/lebrou911-star/lovelace-card-pack */
+/*! lovelace-card-pack v0.1.1 | https://github.com/lebrou911-star/lovelace-card-pack */
 (() => {
   var __defProp = Object.defineProperty;
   var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
@@ -343,7 +343,13 @@
       };
     }
   };
-  customElements.define("expander-card", ExpanderCard);
+  if (customElements.get("expander-card")) {
+    console.warn(
+      "[lovelace-card-pack] 'expander-card' is already registered by another resource. Remove the standalone Expander Card HACS resource to use the one bundled in the pack."
+    );
+  } else {
+    customElements.define("expander-card", ExpanderCard);
+  }
   var EDITOR_SCHEMA = [
     {
       name: "expand-on",
@@ -768,15 +774,19 @@
       this._renderCardsList();
     }
   };
-  customElements.define("expander-card-editor", ExpanderCardEditor);
+  if (!customElements.get("expander-card-editor")) {
+    customElements.define("expander-card-editor", ExpanderCardEditor);
+  }
   window.customCards = window.customCards || [];
-  window.customCards.push({
-    type: "expander-card",
-    name: "Expander Card",
-    description: "A header card that slides open to reveal child cards underneath.",
-    preview: true,
-    documentationURL: "https://github.com/lebrou911-star/lovelace-card-pack"
-  });
+  if (!window.customCards.some((c) => c.type === "expander-card")) {
+    window.customCards.push({
+      type: "expander-card",
+      name: "Expander Card",
+      description: "A header card that slides open to reveal child cards underneath.",
+      preview: true,
+      documentationURL: "https://github.com/lebrou911-star/lovelace-card-pack"
+    });
+  }
   console.info(
     `%c EXPANDER-CARD %c v${VERSION} `,
     "color: white; background: #3b82f6; font-weight: 700;",
@@ -1157,7 +1167,7 @@
   };
 
   // src/minimalistic-area-card-plus/minimalistic-area-card-plus.js
-  var VERSION2 = true ? "0.1.0" : "dev";
+  var VERSION2 = true ? "0.1.1" : "dev";
   var CARD_TYPE = "minimalistic-area-card-plus";
   var EDITOR_TYPE = "minimalistic-area-card-plus-editor";
   var UNAVAILABLE = "unavailable";
@@ -1685,13 +1695,15 @@
     customElements.define(EDITOR_TYPE, MinimalisticAreaCardPlusEditor);
   }
   window.customCards = window.customCards || [];
-  window.customCards.push({
-    type: CARD_TYPE,
-    name: "Minimalistic Area Card Plus",
-    description: "Minimalistic area card with a visual editor and alignment controls for the bottom sensor row. Fork of junalmeida's Minimalistic Area Card.",
-    preview: true,
-    documentationURL: "https://github.com/lebrou911-star/lovelace-card-pack"
-  });
+  if (!window.customCards.some((c) => c.type === CARD_TYPE)) {
+    window.customCards.push({
+      type: CARD_TYPE,
+      name: "Minimalistic Area Card Plus",
+      description: "Minimalistic area card with a visual editor and alignment controls for the bottom sensor row. Fork of junalmeida's Minimalistic Area Card.",
+      preview: true,
+      documentationURL: "https://github.com/lebrou911-star/lovelace-card-pack"
+    });
+  }
   console.info(
     `%c MINIMALISTIC-AREA-CARD-PLUS %c v${VERSION2} `,
     "color: white; background: #ea580c; font-weight: 700;",
@@ -1699,7 +1711,7 @@
   );
 
   // src/index.js
-  var VERSION3 = true ? "0.1.0" : "dev";
+  var VERSION3 = true ? "0.1.1" : "dev";
   console.info(
     `%c LOVELACE-CARD-PACK %c v${VERSION3} `,
     "color: white; background: #6d28d9; font-weight: 700; border-radius: 3px 0 0 3px;",

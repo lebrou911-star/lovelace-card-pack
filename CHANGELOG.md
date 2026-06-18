@@ -3,6 +3,15 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.1.1] - 2024-06-18
+
+### Fixed
+- Make the card registrations idempotent. If another resource (e.g. an old
+  standalone Expander Card) already registered `expander-card`, the bundle now
+  warns instead of throwing — so the other cards in the pack (notably
+  `minimalistic-area-card-plus`) still register. `window.customCards` entries
+  are also de-duplicated.
+
 ## [0.1.0] - 2024-06-18
 
 Initial release. A single-bundle pack of custom Lovelace cards, installable in
@@ -22,4 +31,5 @@ one shot via HACS.
   - alignment controls for the bottom sensor row so text-valued states
     (e.g. `idle`) stay aligned with numeric ones.
 
+[0.1.1]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.1.1
 [0.1.0]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.1.0
