@@ -3,6 +3,17 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.1.3] - 2024-06-18
+
+### Fixed
+- `expander-card`: the `breakout` (full-width children) feature broke inside
+  popups/dialogs (more-info, Bubble Card pop-up, browser_mod…). With no
+  `HUI-VIEW`/`HUI-SECTION` ancestor to measure, it fell back to the full
+  browser viewport width, which on desktop pushed the child cards off-screen —
+  the panel opened but appeared empty. It now falls back to the card's own
+  width inside such containers, so the children stay visible. Also applies when
+  `drop` is combined with `breakout`.
+
 ## [0.1.2] - 2024-06-18
 
 ### Fixed
@@ -40,6 +51,7 @@ one shot via HACS.
   - alignment controls for the bottom sensor row so text-valued states
     (e.g. `idle`) stay aligned with numeric ones.
 
+[0.1.3]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.1.3
 [0.1.2]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.1.2
 [0.1.1]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.1.1
 [0.1.0]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.1.0

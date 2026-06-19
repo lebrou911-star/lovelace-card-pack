@@ -1,4 +1,4 @@
-/*! lovelace-card-pack v0.1.2 | https://github.com/lebrou911-star/lovelace-card-pack */
+/*! lovelace-card-pack v0.1.3 | https://github.com/lebrou911-star/lovelace-card-pack */
 (() => {
   var __defProp = Object.defineProperty;
   var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
@@ -269,7 +269,6 @@
       if (!breakout && drop <= 0) return;
       const rect = this.getBoundingClientRect();
       if (!rect.width) return;
-      const margin = Number(this._config["breakout-margin"]) || 0;
       let width, leftViewport;
       if (breakout) {
         const cr = this._contentRect();
@@ -277,9 +276,8 @@
           width = cr.width;
           leftViewport = cr.left;
         } else {
-          const vw = document.documentElement.clientWidth || window.innerWidth;
-          width = vw - margin * 2;
-          leftViewport = (vw - width) / 2;
+          width = rect.width;
+          leftViewport = rect.left;
         }
         const maxW = Number(this._config["breakout-max"]) || 0;
         if (maxW > 0 && maxW < width) {
@@ -1167,7 +1165,7 @@
   };
 
   // src/minimalistic-area-card-plus/minimalistic-area-card-plus.js
-  var VERSION2 = true ? "0.1.2" : "dev";
+  var VERSION2 = true ? "0.1.3" : "dev";
   var CARD_TYPE = "minimalistic-area-card-plus";
   var EDITOR_TYPE = "minimalistic-area-card-plus-editor";
   var UNAVAILABLE = "unavailable";
@@ -1705,7 +1703,7 @@
   );
 
   // src/index.js
-  var VERSION3 = true ? "0.1.2" : "dev";
+  var VERSION3 = true ? "0.1.3" : "dev";
   console.info(
     `%c LOVELACE-CARD-PACK %c v${VERSION3} `,
     "color: white; background: #6d28d9; font-weight: 700; border-radius: 3px 0 0 3px;",

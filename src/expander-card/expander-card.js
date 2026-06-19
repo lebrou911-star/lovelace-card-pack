@@ -315,7 +315,6 @@ class ExpanderCard extends HTMLElement {
 
     const rect = this.getBoundingClientRect();
     if (!rect.width) return;
-    const margin = Number(this._config["breakout-margin"]) || 0;
 
     // Compute target width + viewport-left.
     let width, leftViewport;
@@ -326,10 +325,14 @@ class ExpanderCard extends HTMLElement {
         width = cr.width;
         leftViewport = cr.left;
       } else {
-        // Fallback: viewport width minus margins.
-        const vw = document.documentElement.clientWidth || window.innerWidth;
-        width = vw - margin * 2;
-        leftViewport = (vw - width) / 2;
+        // No HUI-VIEW / HUI-SECTION ancestor: we're inside a popup or dialog
+        // (more-info, Bubble Card pop-up, browser_mod, …). Breaking out to the
+        // full browser viewport here gives the panel a huge width and a large
+        // negative margin, pushing the child cards off-screen / clipped by the
+        // popup. Fall back to the card's own width/position so the panel stays
+        // inside the popup (effectively no breakout in that context).
+        width = rect.width;
+        leftViewport = rect.left;
       }
       const maxW = Number(this._config["breakout-max"]) || 0;
       if (maxW > 0 && maxW < width) {
