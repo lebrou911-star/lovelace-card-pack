@@ -1,4 +1,4 @@
-/*! lovelace-card-pack v0.1.3 | https://github.com/lebrou911-star/lovelace-card-pack */
+/*! lovelace-card-pack v0.1.4 | https://github.com/lebrou911-star/lovelace-card-pack */
 (() => {
   var __defProp = Object.defineProperty;
   var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
@@ -224,8 +224,10 @@
       const col = this._config && this._config["border-color"];
       this._headerHolderEl.style.boxShadow = this._expanded && col ? `0 0 0 2px ${col}` : "";
     }
-    // Find the content column the card sits in (the section / view container), so
-    // breakout can match it — full width on mobile, the centered column on desktop.
+    // Find the container the card should break out to — the section / view on a
+    // normal dashboard, or the popup surface inside a dialog — so the expanded
+    // children span its full width (not the card's narrow cell, and not the whole
+    // browser viewport, which would overflow a popup).
     _contentRect() {
       const cParent = (n) => {
         if (n.assignedSlot) return n.assignedSlot;
@@ -235,9 +237,11 @@
         return p;
       };
       try {
+        const vw = document.documentElement.clientWidth || window.innerWidth;
         let node = this;
         let guard = 0;
-        while (node && guard++ < 40) {
+        let widestBounded = null;
+        while (node && guard++ < 60) {
           const tag = node.tagName;
           if (tag === "HUI-SECTION") {
             const inner = node.shadowRoot && node.shadowRoot.querySelector(".container");
@@ -246,8 +250,24 @@
           if (tag === "HUI-MASONRY-VIEW" || tag === "HUI-VIEW" || tag === "HUI-PANEL-VIEW") {
             return node.getBoundingClientRect();
           }
+          if (tag === "HA-DIALOG") {
+            const surface = node.shadowRoot && node.shadowRoot.querySelector(".mdc-dialog__surface");
+            const r = (surface || node).getBoundingClientRect();
+            if (r && r.width) return r;
+          }
+          if (node.classList && node.classList.contains("bubble-pop-up")) {
+            const r = node.getBoundingClientRect();
+            if (r && r.width) return r;
+          }
+          if (node.getBoundingClientRect) {
+            const r = node.getBoundingClientRect();
+            if (r && r.width && r.width < vw - 1 && (!widestBounded || r.width > widestBounded.width)) {
+              widestBounded = r;
+            }
+          }
           node = cParent(node);
         }
+        if (widestBounded) return widestBounded;
       } catch (e) {
       }
       return null;
@@ -1165,7 +1185,7 @@
   };
 
   // src/minimalistic-area-card-plus/minimalistic-area-card-plus.js
-  var VERSION2 = true ? "0.1.3" : "dev";
+  var VERSION2 = true ? "0.1.4" : "dev";
   var CARD_TYPE = "minimalistic-area-card-plus";
   var EDITOR_TYPE = "minimalistic-area-card-plus-editor";
   var UNAVAILABLE = "unavailable";
@@ -1703,7 +1723,7 @@
   );
 
   // src/index.js
-  var VERSION3 = true ? "0.1.3" : "dev";
+  var VERSION3 = true ? "0.1.4" : "dev";
   console.info(
     `%c LOVELACE-CARD-PACK %c v${VERSION3} `,
     "color: white; background: #6d28d9; font-weight: 700; border-radius: 3px 0 0 3px;",

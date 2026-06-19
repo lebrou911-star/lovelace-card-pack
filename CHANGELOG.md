@@ -3,6 +3,16 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.1.4] - 2024-06-19
+
+### Fixed
+- `expander-card`: `breakout` now spans the **full popup width** inside dialogs.
+  v0.1.3 stopped the off-screen overflow but fell back to the card's own
+  (narrow) width in popups. The card now measures the popup surface
+  (`ha-dialog` / browser_mod, Bubble Card pop-up, or a generic widest-bounded
+  ancestor) so expanded children fill the popup by default, matching the
+  full-width behaviour on a normal dashboard.
+
 ## [0.1.3] - 2024-06-18
 
 ### Fixed
@@ -51,6 +61,7 @@ one shot via HACS.
   - alignment controls for the bottom sensor row so text-valued states
     (e.g. `idle`) stay aligned with numeric ones.
 
+[0.1.4]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.1.4
 [0.1.3]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.1.3
 [0.1.2]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.1.2
 [0.1.1]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.1.1

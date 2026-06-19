@@ -265,8 +265,10 @@ class ExpanderCard extends HTMLElement {
       this._expanded && col ? `0 0 0 2px ${col}` : "";
   }
 
-  // Find the content column the card sits in (the section / view container), so
-  // breakout can match it — full width on mobile, the centered column on desktop.
+  // Find the container the card should break out to — the section / view on a
+  // normal dashboard, or the popup surface inside a dialog — so the expanded
+  // children span its full width (not the card's narrow cell, and not the whole
+  // browser viewport, which would overflow a popup).
   _contentRect() {
     const cParent = (n) => {
       if (n.assignedSlot) return n.assignedSlot;
@@ -276,10 +278,13 @@ class ExpanderCard extends HTMLElement {
       return p;
     };
     try {
+      const vw = document.documentElement.clientWidth || window.innerWidth;
       let node = this;
       let guard = 0;
-      while (node && guard++ < 40) {
+      let widestBounded = null; // generic popup-surface fallback
+      while (node && guard++ < 60) {
         const tag = node.tagName;
+        // Normal dashboard containers.
         if (tag === "HUI-SECTION") {
           const inner = node.shadowRoot && node.shadowRoot.querySelector(".container");
           return (inner || node).getBoundingClientRect();
@@ -287,10 +292,30 @@ class ExpanderCard extends HTMLElement {
         if (tag === "HUI-MASONRY-VIEW" || tag === "HUI-VIEW" || tag === "HUI-PANEL-VIEW") {
           return node.getBoundingClientRect();
         }
+        // Dialog popups (more-info, browser_mod, …): match the dialog surface.
+        if (tag === "HA-DIALOG") {
+          const surface = node.shadowRoot && node.shadowRoot.querySelector(".mdc-dialog__surface");
+          const r = (surface || node).getBoundingClientRect();
+          if (r && r.width) return r;
+        }
+        // Bubble Card pop-up container.
+        if (node.classList && node.classList.contains("bubble-pop-up")) {
+          const r = node.getBoundingClientRect();
+          if (r && r.width) return r;
+        }
+        // Track the widest ancestor still narrower than the viewport — that's
+        // the popup surface for popup mechanisms we don't recognise explicitly.
+        if (node.getBoundingClientRect) {
+          const r = node.getBoundingClientRect();
+          if (r && r.width && r.width < vw - 1 && (!widestBounded || r.width > widestBounded.width)) {
+            widestBounded = r;
+          }
+        }
         node = cParent(node);
       }
+      if (widestBounded) return widestBounded;
     } catch (e) {
-      /* fall back to viewport */
+      /* fall back to the card's own width */
     }
     return null;
   }
