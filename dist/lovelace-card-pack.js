@@ -1,4 +1,4 @@
-/*! lovelace-card-pack v0.1.4 | https://github.com/lebrou911-star/lovelace-card-pack */
+/*! lovelace-card-pack v0.1.5 | https://github.com/lebrou911-star/lovelace-card-pack */
 (() => {
   var __defProp = Object.defineProperty;
   var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
@@ -224,11 +224,8 @@
       const col = this._config && this._config["border-color"];
       this._headerHolderEl.style.boxShadow = this._expanded && col ? `0 0 0 2px ${col}` : "";
     }
-    // Find the container the card should break out to — the section / view on a
-    // normal dashboard, or the popup surface inside a dialog — so the expanded
-    // children span its full width (not the card's narrow cell, and not the whole
-    // browser viewport, which would overflow a popup).
-    _contentRect() {
+    // Walk up the (shadow-piercing) ancestor chain.
+    _climb(visit) {
       const cParent = (n) => {
         if (n.assignedSlot) return n.assignedSlot;
         const p = n.parentNode;
@@ -236,12 +233,22 @@
         if (p.nodeType === 11) return p.host || null;
         return p;
       };
+      let node = this;
+      let guard = 0;
+      while (node && guard++ < 60) {
+        const out = visit(node);
+        if (out) return out;
+        node = cParent(node);
+      }
+      return null;
+    }
+    // Find the content column the card sits in (the section / view container), so
+    // breakout can match it — full width on mobile, the centered column on desktop.
+    // Returns null on layouts we don't recognise (e.g. layout-card), so breakout
+    // falls back to the viewport (or the popup, when inside one).
+    _contentRect() {
       try {
-        const vw = document.documentElement.clientWidth || window.innerWidth;
-        let node = this;
-        let guard = 0;
-        let widestBounded = null;
-        while (node && guard++ < 60) {
+        return this._climb((node) => {
           const tag = node.tagName;
           if (tag === "HUI-SECTION") {
             const inner = node.shadowRoot && node.shadowRoot.querySelector(".container");
@@ -250,27 +257,40 @@
           if (tag === "HUI-MASONRY-VIEW" || tag === "HUI-VIEW" || tag === "HUI-PANEL-VIEW") {
             return node.getBoundingClientRect();
           }
+          return null;
+        });
+      } catch (e) {
+        return null;
+      }
+    }
+    // If the card lives inside a popup/dialog, return that popup's content rect so
+    // breakout fills the popup instead of the whole browser viewport (which would
+    // push the children off-screen). Returns null on a normal dashboard, so the
+    // viewport fallback (the long-standing breakout behaviour) is preserved there.
+    _popupRect() {
+      try {
+        const vw = document.documentElement.clientWidth || window.innerWidth;
+        return this._climb((node) => {
+          if (node === this || node.nodeType !== 1) return null;
+          const tag = node.tagName;
           if (tag === "HA-DIALOG") {
             const surface = node.shadowRoot && node.shadowRoot.querySelector(".mdc-dialog__surface");
             const r = (surface || node).getBoundingClientRect();
-            if (r && r.width) return r;
+            if (r && r.width && r.width < vw) return r;
           }
-          if (node.classList && node.classList.contains("bubble-pop-up")) {
+          if (node.classList && (node.classList.contains("bubble-pop-up") || node.classList.contains("bubble-pop-up-container"))) {
             const r = node.getBoundingClientRect();
-            if (r && r.width) return r;
+            if (r && r.width && r.width < vw) return r;
           }
-          if (node.getBoundingClientRect) {
+          if (node.getAttribute && node.getAttribute("role") === "dialog") {
             const r = node.getBoundingClientRect();
-            if (r && r.width && r.width < vw - 1 && (!widestBounded || r.width > widestBounded.width)) {
-              widestBounded = r;
-            }
+            if (r && r.width && r.width < vw) return r;
           }
-          node = cParent(node);
-        }
-        if (widestBounded) return widestBounded;
+          return null;
+        });
       } catch (e) {
+        return null;
       }
-      return null;
     }
     // Let the expanded children break out of the card's grid cell. They match the
     // content column width by default (full width on mobile, the centered column on
@@ -291,13 +311,21 @@
       if (!rect.width) return;
       let width, leftViewport;
       if (breakout) {
+        const margin = Number(this._config["breakout-margin"]) || 0;
         const cr = this._contentRect();
         if (cr && cr.width) {
           width = cr.width;
           leftViewport = cr.left;
         } else {
-          width = rect.width;
-          leftViewport = rect.left;
+          const pr = this._popupRect();
+          if (pr && pr.width) {
+            width = pr.width - margin * 2;
+            leftViewport = pr.left + margin;
+          } else {
+            const vw = document.documentElement.clientWidth || window.innerWidth;
+            width = vw - margin * 2;
+            leftViewport = (vw - width) / 2;
+          }
         }
         const maxW = Number(this._config["breakout-max"]) || 0;
         if (maxW > 0 && maxW < width) {
@@ -1185,7 +1213,7 @@
   };
 
   // src/minimalistic-area-card-plus/minimalistic-area-card-plus.js
-  var VERSION2 = true ? "0.1.4" : "dev";
+  var VERSION2 = true ? "0.1.5" : "dev";
   var CARD_TYPE = "minimalistic-area-card-plus";
   var EDITOR_TYPE = "minimalistic-area-card-plus-editor";
   var UNAVAILABLE = "unavailable";
@@ -1723,7 +1751,7 @@
   );
 
   // src/index.js
-  var VERSION3 = true ? "0.1.4" : "dev";
+  var VERSION3 = true ? "0.1.5" : "dev";
   console.info(
     `%c LOVELACE-CARD-PACK %c v${VERSION3} `,
     "color: white; background: #6d28d9; font-weight: 700; border-radius: 3px 0 0 3px;",

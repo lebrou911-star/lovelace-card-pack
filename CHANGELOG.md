@@ -3,6 +3,17 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.1.5] - 2024-06-19
+
+### Fixed
+- `expander-card`: restore the viewport (full-width) breakout fallback for
+  normal dashboards. v0.1.3 had replaced it with the card's own width, which
+  broke sideways breakout on layouts where no `HUI-SECTION`/`HUI-VIEW` is
+  detected (e.g. layout-card) — exactly where `breakout-margin` matters. Popup
+  containment is now done only when an actual popup is detected (`ha-dialog` /
+  browser_mod, Bubble Card pop-up, or `role="dialog"`): there the panel fills
+  the popup; everywhere else it breaks out to the viewport as before.
+
 ## [0.1.4] - 2024-06-19
 
 ### Fixed
@@ -61,6 +72,7 @@ one shot via HACS.
   - alignment controls for the bottom sensor row so text-valued states
     (e.g. `idle`) stay aligned with numeric ones.
 
+[0.1.5]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.1.5
 [0.1.4]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.1.4
 [0.1.3]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.1.3
 [0.1.2]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.1.2

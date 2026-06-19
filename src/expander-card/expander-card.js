@@ -265,11 +265,8 @@ class ExpanderCard extends HTMLElement {
       this._expanded && col ? `0 0 0 2px ${col}` : "";
   }
 
-  // Find the container the card should break out to — the section / view on a
-  // normal dashboard, or the popup surface inside a dialog — so the expanded
-  // children span its full width (not the card's narrow cell, and not the whole
-  // browser viewport, which would overflow a popup).
-  _contentRect() {
+  // Walk up the (shadow-piercing) ancestor chain.
+  _climb(visit) {
     const cParent = (n) => {
       if (n.assignedSlot) return n.assignedSlot;
       const p = n.parentNode;
@@ -277,14 +274,24 @@ class ExpanderCard extends HTMLElement {
       if (p.nodeType === 11) return p.host || null; // ShadowRoot
       return p;
     };
+    let node = this;
+    let guard = 0;
+    while (node && guard++ < 60) {
+      const out = visit(node);
+      if (out) return out;
+      node = cParent(node);
+    }
+    return null;
+  }
+
+  // Find the content column the card sits in (the section / view container), so
+  // breakout can match it — full width on mobile, the centered column on desktop.
+  // Returns null on layouts we don't recognise (e.g. layout-card), so breakout
+  // falls back to the viewport (or the popup, when inside one).
+  _contentRect() {
     try {
-      const vw = document.documentElement.clientWidth || window.innerWidth;
-      let node = this;
-      let guard = 0;
-      let widestBounded = null; // generic popup-surface fallback
-      while (node && guard++ < 60) {
+      return this._climb((node) => {
         const tag = node.tagName;
-        // Normal dashboard containers.
         if (tag === "HUI-SECTION") {
           const inner = node.shadowRoot && node.shadowRoot.querySelector(".container");
           return (inner || node).getBoundingClientRect();
@@ -292,32 +299,44 @@ class ExpanderCard extends HTMLElement {
         if (tag === "HUI-MASONRY-VIEW" || tag === "HUI-VIEW" || tag === "HUI-PANEL-VIEW") {
           return node.getBoundingClientRect();
         }
-        // Dialog popups (more-info, browser_mod, …): match the dialog surface.
+        return null;
+      });
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // If the card lives inside a popup/dialog, return that popup's content rect so
+  // breakout fills the popup instead of the whole browser viewport (which would
+  // push the children off-screen). Returns null on a normal dashboard, so the
+  // viewport fallback (the long-standing breakout behaviour) is preserved there.
+  _popupRect() {
+    try {
+      const vw = document.documentElement.clientWidth || window.innerWidth;
+      return this._climb((node) => {
+        if (node === this || node.nodeType !== 1) return null;
+        const tag = node.tagName;
+        // more-info / browser_mod dialogs.
         if (tag === "HA-DIALOG") {
           const surface = node.shadowRoot && node.shadowRoot.querySelector(".mdc-dialog__surface");
           const r = (surface || node).getBoundingClientRect();
-          if (r && r.width) return r;
+          if (r && r.width && r.width < vw) return r;
         }
-        // Bubble Card pop-up container.
-        if (node.classList && node.classList.contains("bubble-pop-up")) {
+        // Bubble Card pop-up.
+        if (node.classList && (node.classList.contains("bubble-pop-up") || node.classList.contains("bubble-pop-up-container"))) {
           const r = node.getBoundingClientRect();
-          if (r && r.width) return r;
+          if (r && r.width && r.width < vw) return r;
         }
-        // Track the widest ancestor still narrower than the viewport — that's
-        // the popup surface for popup mechanisms we don't recognise explicitly.
-        if (node.getBoundingClientRect) {
+        // Generic dialog role.
+        if (node.getAttribute && node.getAttribute("role") === "dialog") {
           const r = node.getBoundingClientRect();
-          if (r && r.width && r.width < vw - 1 && (!widestBounded || r.width > widestBounded.width)) {
-            widestBounded = r;
-          }
+          if (r && r.width && r.width < vw) return r;
         }
-        node = cParent(node);
-      }
-      if (widestBounded) return widestBounded;
+        return null;
+      });
     } catch (e) {
-      /* fall back to the card's own width */
+      return null;
     }
-    return null;
   }
 
   // Let the expanded children break out of the card's grid cell. They match the
@@ -344,20 +363,26 @@ class ExpanderCard extends HTMLElement {
     // Compute target width + viewport-left.
     let width, leftViewport;
     if (breakout) {
+      const margin = Number(this._config["breakout-margin"]) || 0;
       const cr = this._contentRect();
       if (cr && cr.width) {
         // Match the content column (aligns with the other cards).
         width = cr.width;
         leftViewport = cr.left;
       } else {
-        // No HUI-VIEW / HUI-SECTION ancestor: we're inside a popup or dialog
-        // (more-info, Bubble Card pop-up, browser_mod, …). Breaking out to the
-        // full browser viewport here gives the panel a huge width and a large
-        // negative margin, pushing the child cards off-screen / clipped by the
-        // popup. Fall back to the card's own width/position so the panel stays
-        // inside the popup (effectively no breakout in that context).
-        width = rect.width;
-        leftViewport = rect.left;
+        const pr = this._popupRect();
+        if (pr && pr.width) {
+          // Inside a popup/dialog: fill the popup, not the whole browser
+          // viewport (which would push the children off-screen on desktop).
+          width = pr.width - margin * 2;
+          leftViewport = pr.left + margin;
+        } else {
+          // Normal dashboard with a layout we don't recognise (e.g. layout-card):
+          // break out to the viewport, the long-standing behaviour.
+          const vw = document.documentElement.clientWidth || window.innerWidth;
+          width = vw - margin * 2;
+          leftViewport = (vw - width) / 2;
+        }
       }
       const maxW = Number(this._config["breakout-max"]) || 0;
       if (maxW > 0 && maxW < width) {
