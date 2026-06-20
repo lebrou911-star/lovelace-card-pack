@@ -50,6 +50,21 @@ function hasAction(config) {
 function handleAction(node, hass, actionConfig, fallbackEntityId) {
   if (!actionConfig) return;
   const action = actionConfig.action || "more-info";
+  if (action === "none") return;
+
+  // Optional confirmation, like native HA: tap_action: { confirmation: { text, exemptions } }.
+  if (actionConfig.confirmation) {
+    const c = actionConfig.confirmation === true ? {} : actionConfig.confirmation;
+    const exempt =
+      Array.isArray(c.exemptions) &&
+      hass &&
+      hass.user &&
+      c.exemptions.some((e) => e && e.user === hass.user.id);
+    if (!exempt && !window.confirm(c.text || "Are you sure you want to perform this action?")) {
+      return;
+    }
+  }
+
   switch (action) {
     case "none":
       break;

@@ -3,6 +3,15 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.3.0] - 2026-06-20
+
+### Added
+- `minimalistic-area-card-plus`: tap / hold / double-tap actions now honour a
+  `confirmation` option, like native Home Assistant actions — e.g.
+  `tap_action: { action: toggle, confirmation: { text: "…" } }` pops a confirm
+  prompt before toggling. Supports `confirmation.text` and
+  `confirmation.exemptions` (users who skip the prompt).
+
 ## [0.2.9] - 2026-06-20
 
 ### Fixed
@@ -176,6 +185,7 @@ one shot via HACS.
   - alignment controls for the bottom sensor row so text-valued states
     (e.g. `idle`) stay aligned with numeric ones.
 
+[0.3.0]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.3.0
 [0.2.9]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.2.9
 [0.2.8]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.2.8
 [0.2.7]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.2.7

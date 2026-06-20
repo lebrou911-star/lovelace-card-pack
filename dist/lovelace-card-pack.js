@@ -1,4 +1,4 @@
-/*! lovelace-card-pack v0.2.9 | https://github.com/lebrou911-star/lovelace-card-pack */
+/*! lovelace-card-pack v0.3.0 | https://github.com/lebrou911-star/lovelace-card-pack */
 (() => {
   var __defProp = Object.defineProperty;
   var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
@@ -1457,7 +1457,7 @@
   };
 
   // src/minimalistic-area-card-plus/minimalistic-area-card-plus.js
-  var VERSION2 = true ? "0.2.9" : "dev";
+  var VERSION2 = true ? "0.3.0" : "dev";
   var CARD_TYPE = "minimalistic-area-card-plus";
   var EDITOR_TYPE = "minimalistic-area-card-plus-editor";
   var UNAVAILABLE = "unavailable";
@@ -1478,6 +1478,14 @@
   function handleAction(node, hass, actionConfig, fallbackEntityId) {
     if (!actionConfig) return;
     const action = actionConfig.action || "more-info";
+    if (action === "none") return;
+    if (actionConfig.confirmation) {
+      const c = actionConfig.confirmation === true ? {} : actionConfig.confirmation;
+      const exempt = Array.isArray(c.exemptions) && hass && hass.user && c.exemptions.some((e) => e && e.user === hass.user.id);
+      if (!exempt && !window.confirm(c.text || "Are you sure you want to perform this action?")) {
+        return;
+      }
+    }
     switch (action) {
       case "none":
         break;
@@ -2135,7 +2143,7 @@
   );
 
   // src/index.js
-  var VERSION3 = true ? "0.2.9" : "dev";
+  var VERSION3 = true ? "0.3.0" : "dev";
   console.info(
     `%c LOVELACE-CARD-PACK %c v${VERSION3} `,
     "color: white; background: #6d28d9; font-weight: 700; border-radius: 3px 0 0 3px;",
