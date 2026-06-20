@@ -1,0 +1,31 @@
+name: Cleanup release
+
+# Manual maintenance workflow: delete a release and its git tag.
+# Used to remove a mis-tagged release (e.g. v0.2.0, which the Releases API had
+# pinned to the wrong commit before release.yml set target_commitish).
+# Run from the Actions tab → "Cleanup release" → Run workflow → enter the tag.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag / release to delete (e.g. v0.2.0)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  delete:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Delete release and its tag
+        run: |
+          tag="${{ github.event.inputs.tag }}"
+          echo "Deleting release and tag $tag from ${{ github.repository }}"
+          gh release delete "$tag" \
+            --repo "${{ github.repository }}" \
+            --cleanup-tag \
+            --yes
