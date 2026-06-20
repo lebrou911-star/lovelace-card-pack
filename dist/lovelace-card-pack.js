@@ -1,4 +1,4 @@
-/*! lovelace-card-pack v0.2.4 | https://github.com/lebrou911-star/lovelace-card-pack */
+/*! lovelace-card-pack v0.2.5 | https://github.com/lebrou911-star/lovelace-card-pack */
 (() => {
   var __defProp = Object.defineProperty;
   var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
@@ -1027,6 +1027,7 @@
     }
     _emit(config) {
       this._config = config;
+      this._skipEntityRebuild = true;
       fireEvent(this, "config-changed", { config });
     }
     _render() {
@@ -1061,6 +1062,23 @@
           .add-row { display: flex; align-items: center; gap: 8px; }
           .add-row ha-entity-picker { flex: 1; }
           ha-textfield { width: 100%; }
+          /* Native text fields (ha-textfield isn't always registered in a card
+             editor context, so it can render invisibly — these always show). */
+          .field { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+          .field label { font-size: 0.8em; color: var(--secondary-text-color); }
+          .field input {
+            width: 100%;
+            box-sizing: border-box;
+            background: var(--secondary-background-color, rgba(255,255,255,0.06));
+            color: var(--primary-text-color, #fff);
+            border: 1px solid var(--divider-color, #5b5b5b);
+            border-radius: 6px;
+            padding: 10px 12px;
+            font-size: 14px;
+            font-family: inherit;
+          }
+          .field input::placeholder { color: var(--disabled-text-color, #888); }
+          .field input:focus { outline: none; border-color: var(--primary-color, #03a9f4); }
           .hint { color: var(--secondary-text-color); font-size: 0.85em; margin: 0 0 4px; line-height: 1.3; }
         </style>
         <div class="editor">
@@ -1104,7 +1122,8 @@
       this._mainForm.data = this._config;
       this._alignForm.hass = this._hass;
       this._alignForm.data = this._config;
-      this._renderEntities();
+      if (this._skipEntityRebuild) this._skipEntityRebuild = false;
+      else this._renderEntities();
       this._renderAddRow();
     }
     /* ----- entities list ----- */
@@ -1114,6 +1133,28 @@
       list.forEach((item, index) => {
         this._entitiesEl.appendChild(this._buildEntityRow(item, index, list.length));
       });
+    }
+    // A labelled native <input> wrapped in .field. onInput receives the raw
+    // string value. Returns the wrapper (its .input is the input element).
+    _field(labelText, value, onInput, opts = {}) {
+      const wrap = document.createElement("div");
+      wrap.className = "field" + (opts.full ? " full" : "");
+      const label = document.createElement("label");
+      label.textContent = labelText;
+      const input = document.createElement("input");
+      input.type = opts.type || "text";
+      if (opts.type === "number") {
+        input.inputMode = "numeric";
+        if (opts.min != null) input.min = String(opts.min);
+        if (opts.max != null) input.max = String(opts.max);
+      }
+      if (opts.placeholder) input.placeholder = opts.placeholder;
+      input.value = value == null ? "" : String(value);
+      input.addEventListener("input", () => onInput(input.value));
+      wrap.appendChild(label);
+      wrap.appendChild(input);
+      wrap.input = input;
+      return wrap;
     }
     _buildEntityRow(item, index, count) {
       const conf = typeof item === "string" ? { entity: item } : { ...item };
@@ -1143,77 +1184,60 @@
         this._updateEntity(index, "icon", v);
       });
       row.appendChild(iconPicker);
-      const nameField = document.createElement("ha-textfield");
-      nameField.label = "Name (optional)";
-      nameField.outlined = true;
-      nameField.value = conf.name || "";
-      nameField.addEventListener("input", (ev) => {
-        this._updateEntity(
+      const nameField = this._field(
+        "Name (optional)",
+        conf.name || "",
+        (v) => this._updateEntity(
           index,
           "name",
-          ev.target.value,
+          v,
           /* silent */
           true
-        );
-      });
-      nameField.addEventListener("change", (ev) => {
-        this._updateEntity(index, "name", ev.target.value);
-      });
-      row.appendChild(nameField);
-      const iconTpl = document.createElement("ha-textfield");
-      iconTpl.label = "Icon (template {{ }})";
-      iconTpl.outlined = true;
-      iconTpl.classList.add("full");
-      iconTpl.value = iconIsTpl ? conf.icon : "";
-      const setIconTpl = (ev) => this._updateEntity(
-        index,
-        "icon",
-        ev.target.value,
-        /* silent */
-        true
+        )
       );
-      iconTpl.addEventListener("input", setIconTpl);
-      iconTpl.addEventListener("change", setIconTpl);
+      row.appendChild(nameField);
+      const iconTpl = this._field(
+        "Icon (template {{ }})",
+        iconIsTpl ? conf.icon : "",
+        (v) => this._updateEntity(
+          index,
+          "icon",
+          v,
+          /* silent */
+          true
+        ),
+        { full: true, placeholder: "{{ 'mdi:fire' if ... }}" }
+      );
       row.appendChild(iconTpl);
       const advancedHint = document.createElement("div");
       advancedHint.className = "full hint";
       advancedHint.textContent = "Pick a static icon above, or type a Jinja template ({{ … }}) in the “template” field. Colour & badge colour also accept templates.";
       row.appendChild(advancedHint);
-      const colorField = document.createElement("ha-textfield");
-      colorField.label = "Icon colour (optional)";
-      colorField.outlined = true;
-      colorField.value = conf.color || "";
-      colorField.addEventListener("input", (ev) => {
-        this._updateEntity(
+      const colorField = this._field(
+        "Icon colour (optional)",
+        conf.color || "",
+        (v) => this._updateEntity(
           index,
           "color",
-          ev.target.value,
+          v,
           /* silent */
           true
-        );
-      });
-      colorField.addEventListener("change", (ev) => {
-        this._updateEntity(index, "color", ev.target.value);
-      });
+        ),
+        { placeholder: "amber / #ff9800 / {{ … }}" }
+      );
       row.appendChild(colorField);
-      const sizeField = document.createElement("ha-textfield");
-      sizeField.label = "Icon size %";
-      sizeField.outlined = true;
-      sizeField.type = "number";
-      sizeField.value = conf.icon_size != null ? conf.icon_size : "";
-      const sizeVal = (raw) => raw === "" || raw == null ? "" : Number(raw);
-      sizeField.addEventListener("input", (ev) => {
-        this._updateEntity(
+      const sizeField = this._field(
+        "Icon size %",
+        conf.icon_size != null ? conf.icon_size : "",
+        (v) => this._updateEntity(
           index,
           "icon_size",
-          sizeVal(ev.target.value),
+          v === "" ? "" : Number(v),
           /* silent */
           true
-        );
-      });
-      sizeField.addEventListener("change", (ev) => {
-        this._updateEntity(index, "icon_size", sizeVal(ev.target.value));
-      });
+        ),
+        { type: "number", min: 10, max: 400 }
+      );
       row.appendChild(sizeField);
       const badgeIsTpl = isTemplate(conf.badge_icon);
       const badgeIconPicker = document.createElement("ha-icon-picker");
@@ -1229,38 +1253,31 @@
         this._updateEntity(index, "badge_icon", v);
       });
       row.appendChild(badgeIconPicker);
-      const badgeIconTpl = document.createElement("ha-textfield");
-      badgeIconTpl.label = "Badge icon (template {{ }})";
-      badgeIconTpl.outlined = true;
-      badgeIconTpl.classList.add("full");
-      badgeIconTpl.value = badgeIsTpl ? conf.badge_icon : "";
-      const setBadgeTpl = (ev) => this._updateEntity(
-        index,
-        "badge_icon",
-        ev.target.value,
-        /* silent */
-        true
-      );
-      badgeIconTpl.addEventListener("input", setBadgeTpl);
-      badgeIconTpl.addEventListener("change", setBadgeTpl);
-      row.appendChild(badgeIconTpl);
-      const badgeColorField = document.createElement("ha-textfield");
-      badgeColorField.label = "Badge colour / condition (optional)";
-      badgeColorField.outlined = true;
-      badgeColorField.classList.add("full");
-      badgeColorField.value = conf.badge_color || "";
-      badgeColorField.addEventListener("input", (ev) => {
-        this._updateEntity(
+      const badgeIconTpl = this._field(
+        "Badge icon (template {{ }})",
+        badgeIsTpl ? conf.badge_icon : "",
+        (v) => this._updateEntity(
           index,
-          "badge_color",
-          ev.target.value,
+          "badge_icon",
+          v,
           /* silent */
           true
-        );
-      });
-      badgeColorField.addEventListener("change", (ev) => {
-        this._updateEntity(index, "badge_color", ev.target.value);
-      });
+        ),
+        { full: true, placeholder: "{{ 'mdi:alert' if ... }}" }
+      );
+      row.appendChild(badgeIconTpl);
+      const badgeColorField = this._field(
+        "Badge colour / condition (optional)",
+        conf.badge_color || "",
+        (v) => this._updateEntity(
+          index,
+          "badge_color",
+          v,
+          /* silent */
+          true
+        ),
+        { full: true, placeholder: "red / {{ 'red' if ... else 'none' }}" }
+      );
       row.appendChild(badgeColorField);
       const actionSelector = document.createElement("ha-selector");
       actionSelector.hass = this._hass;
@@ -1420,7 +1437,7 @@
   };
 
   // src/minimalistic-area-card-plus/minimalistic-area-card-plus.js
-  var VERSION2 = true ? "0.2.4" : "dev";
+  var VERSION2 = true ? "0.2.5" : "dev";
   var CARD_TYPE = "minimalistic-area-card-plus";
   var EDITOR_TYPE = "minimalistic-area-card-plus-editor";
   var UNAVAILABLE = "unavailable";
@@ -2090,7 +2107,7 @@
   );
 
   // src/index.js
-  var VERSION3 = true ? "0.2.4" : "dev";
+  var VERSION3 = true ? "0.2.5" : "dev";
   console.info(
     `%c LOVELACE-CARD-PACK %c v${VERSION3} `,
     "color: white; background: #6d28d9; font-weight: 700; border-radius: 3px 0 0 3px;",

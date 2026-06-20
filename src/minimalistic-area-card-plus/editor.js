@@ -215,6 +215,9 @@ class MinimalisticAreaCardPlusEditor extends HTMLElement {
 
   _emit(config) {
     this._config = config;
+    // If HA echoes this back via setConfig, don't rebuild the entity rows —
+    // that would steal focus from the field being typed in.
+    this._skipEntityRebuild = true;
     fireEvent(this, "config-changed", { config });
   }
 
@@ -254,6 +257,23 @@ class MinimalisticAreaCardPlusEditor extends HTMLElement {
           .add-row { display: flex; align-items: center; gap: 8px; }
           .add-row ha-entity-picker { flex: 1; }
           ha-textfield { width: 100%; }
+          /* Native text fields (ha-textfield isn't always registered in a card
+             editor context, so it can render invisibly — these always show). */
+          .field { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+          .field label { font-size: 0.8em; color: var(--secondary-text-color); }
+          .field input {
+            width: 100%;
+            box-sizing: border-box;
+            background: var(--secondary-background-color, rgba(255,255,255,0.06));
+            color: var(--primary-text-color, #fff);
+            border: 1px solid var(--divider-color, #5b5b5b);
+            border-radius: 6px;
+            padding: 10px 12px;
+            font-size: 14px;
+            font-family: inherit;
+          }
+          .field input::placeholder { color: var(--disabled-text-color, #888); }
+          .field input:focus { outline: none; border-color: var(--primary-color, #03a9f4); }
           .hint { color: var(--secondary-text-color); font-size: 0.85em; margin: 0 0 4px; line-height: 1.3; }
         </style>
         <div class="editor">
@@ -305,7 +325,8 @@ class MinimalisticAreaCardPlusEditor extends HTMLElement {
     this._alignForm.hass = this._hass;
     this._alignForm.data = this._config;
 
-    this._renderEntities();
+    if (this._skipEntityRebuild) this._skipEntityRebuild = false;
+    else this._renderEntities();
     this._renderAddRow();
   }
 
@@ -317,6 +338,29 @@ class MinimalisticAreaCardPlusEditor extends HTMLElement {
     list.forEach((item, index) => {
       this._entitiesEl.appendChild(this._buildEntityRow(item, index, list.length));
     });
+  }
+
+  // A labelled native <input> wrapped in .field. onInput receives the raw
+  // string value. Returns the wrapper (its .input is the input element).
+  _field(labelText, value, onInput, opts = {}) {
+    const wrap = document.createElement("div");
+    wrap.className = "field" + (opts.full ? " full" : "");
+    const label = document.createElement("label");
+    label.textContent = labelText;
+    const input = document.createElement("input");
+    input.type = opts.type || "text";
+    if (opts.type === "number") {
+      input.inputMode = "numeric";
+      if (opts.min != null) input.min = String(opts.min);
+      if (opts.max != null) input.max = String(opts.max);
+    }
+    if (opts.placeholder) input.placeholder = opts.placeholder;
+    input.value = value == null ? "" : String(value);
+    input.addEventListener("input", () => onInput(input.value));
+    wrap.appendChild(label);
+    wrap.appendChild(input);
+    wrap.input = input;
+    return wrap;
   }
 
   _buildEntityRow(item, index, count) {
@@ -352,28 +396,19 @@ class MinimalisticAreaCardPlusEditor extends HTMLElement {
     });
     row.appendChild(iconPicker);
 
-    const nameField = document.createElement("ha-textfield");
-    nameField.label = "Name (optional)";
-    nameField.outlined = true;
-    nameField.value = conf.name || "";
-    nameField.addEventListener("input", (ev) => {
-      this._updateEntity(index, "name", ev.target.value, /* silent */ true);
-    });
-    nameField.addEventListener("change", (ev) => {
-      this._updateEntity(index, "name", ev.target.value);
-    });
+    const nameField = this._field("Name (optional)", conf.name || "", (v) =>
+      this._updateEntity(index, "name", v, /* silent */ true)
+    );
     row.appendChild(nameField);
 
     // Template alternative to the icon picker. Whichever is filled wins; a
     // template ({{ … }}) lives here, a static mdi icon lives in the picker.
-    const iconTpl = document.createElement("ha-textfield");
-    iconTpl.label = "Icon (template {{ }})";
-    iconTpl.outlined = true;
-    iconTpl.classList.add("full");
-    iconTpl.value = iconIsTpl ? conf.icon : "";
-    const setIconTpl = (ev) => this._updateEntity(index, "icon", ev.target.value, /* silent */ true);
-    iconTpl.addEventListener("input", setIconTpl);
-    iconTpl.addEventListener("change", setIconTpl);
+    const iconTpl = this._field(
+      "Icon (template {{ }})",
+      iconIsTpl ? conf.icon : "",
+      (v) => this._updateEntity(index, "icon", v, /* silent */ true),
+      { full: true, placeholder: "{{ 'mdi:fire' if ... }}" }
+    );
     row.appendChild(iconTpl);
 
     const advancedHint = document.createElement("div");
@@ -382,30 +417,20 @@ class MinimalisticAreaCardPlusEditor extends HTMLElement {
       "Pick a static icon above, or type a Jinja template ({{ … }}) in the “template” field. Colour & badge colour also accept templates.";
     row.appendChild(advancedHint);
 
-    const colorField = document.createElement("ha-textfield");
-    colorField.label = "Icon colour (optional)";
-    colorField.outlined = true;
-    colorField.value = conf.color || "";
-    colorField.addEventListener("input", (ev) => {
-      this._updateEntity(index, "color", ev.target.value, /* silent */ true);
-    });
-    colorField.addEventListener("change", (ev) => {
-      this._updateEntity(index, "color", ev.target.value);
-    });
+    const colorField = this._field(
+      "Icon colour (optional)",
+      conf.color || "",
+      (v) => this._updateEntity(index, "color", v, /* silent */ true),
+      { placeholder: "amber / #ff9800 / {{ … }}" }
+    );
     row.appendChild(colorField);
 
-    const sizeField = document.createElement("ha-textfield");
-    sizeField.label = "Icon size %";
-    sizeField.outlined = true;
-    sizeField.type = "number";
-    sizeField.value = conf.icon_size != null ? conf.icon_size : "";
-    const sizeVal = (raw) => (raw === "" || raw == null ? "" : Number(raw));
-    sizeField.addEventListener("input", (ev) => {
-      this._updateEntity(index, "icon_size", sizeVal(ev.target.value), /* silent */ true);
-    });
-    sizeField.addEventListener("change", (ev) => {
-      this._updateEntity(index, "icon_size", sizeVal(ev.target.value));
-    });
+    const sizeField = this._field(
+      "Icon size %",
+      conf.icon_size != null ? conf.icon_size : "",
+      (v) => this._updateEntity(index, "icon_size", v === "" ? "" : Number(v), /* silent */ true),
+      { type: "number", min: 10, max: 400 }
+    );
     row.appendChild(sizeField);
 
     const badgeIsTpl = isTemplate(conf.badge_icon);
@@ -423,27 +448,20 @@ class MinimalisticAreaCardPlusEditor extends HTMLElement {
     });
     row.appendChild(badgeIconPicker);
 
-    const badgeIconTpl = document.createElement("ha-textfield");
-    badgeIconTpl.label = "Badge icon (template {{ }})";
-    badgeIconTpl.outlined = true;
-    badgeIconTpl.classList.add("full");
-    badgeIconTpl.value = badgeIsTpl ? conf.badge_icon : "";
-    const setBadgeTpl = (ev) => this._updateEntity(index, "badge_icon", ev.target.value, /* silent */ true);
-    badgeIconTpl.addEventListener("input", setBadgeTpl);
-    badgeIconTpl.addEventListener("change", setBadgeTpl);
+    const badgeIconTpl = this._field(
+      "Badge icon (template {{ }})",
+      badgeIsTpl ? conf.badge_icon : "",
+      (v) => this._updateEntity(index, "badge_icon", v, /* silent */ true),
+      { full: true, placeholder: "{{ 'mdi:alert' if ... }}" }
+    );
     row.appendChild(badgeIconTpl);
 
-    const badgeColorField = document.createElement("ha-textfield");
-    badgeColorField.label = "Badge colour / condition (optional)";
-    badgeColorField.outlined = true;
-    badgeColorField.classList.add("full");
-    badgeColorField.value = conf.badge_color || "";
-    badgeColorField.addEventListener("input", (ev) => {
-      this._updateEntity(index, "badge_color", ev.target.value, /* silent */ true);
-    });
-    badgeColorField.addEventListener("change", (ev) => {
-      this._updateEntity(index, "badge_color", ev.target.value);
-    });
+    const badgeColorField = this._field(
+      "Badge colour / condition (optional)",
+      conf.badge_color || "",
+      (v) => this._updateEntity(index, "badge_color", v, /* silent */ true),
+      { full: true, placeholder: "red / {{ 'red' if ... else 'none' }}" }
+    );
     row.appendChild(badgeColorField);
 
     const actionSelector = document.createElement("ha-selector");
