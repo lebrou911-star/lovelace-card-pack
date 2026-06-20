@@ -3,6 +3,14 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.2.6] - 2026-06-20
+
+### Changed
+- `minimalistic-area-card-plus` editor: each entity row is simpler again. By
+  default it shows only Entity, Icon, Name and Tap action; colour, icon size,
+  badge and the Jinja template fields are tucked into a collapsible "Advanced"
+  section per row. The "Sensor row alignment" block is now collapsible too.
+
 ## [0.2.5] - 2026-06-20
 
 ### Fixed
@@ -141,6 +149,7 @@ one shot via HACS.
   - alignment controls for the bottom sensor row so text-valued states
     (e.g. `idle`) stay aligned with numeric ones.
 
+[0.2.6]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.2.6
 [0.2.5]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.2.5
 [0.2.4]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.2.4
 [0.2.3]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.2.3

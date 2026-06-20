@@ -1,4 +1,4 @@
-/*! lovelace-card-pack v0.2.5 | https://github.com/lebrou911-star/lovelace-card-pack */
+/*! lovelace-card-pack v0.2.6 | https://github.com/lebrou911-star/lovelace-card-pack */
 (() => {
   var __defProp = Object.defineProperty;
   var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
@@ -1080,20 +1080,32 @@
           .field input::placeholder { color: var(--disabled-text-color, #888); }
           .field input:focus { outline: none; border-color: var(--primary-color, #03a9f4); }
           .hint { color: var(--secondary-text-color); font-size: 0.85em; margin: 0 0 4px; line-height: 1.3; }
+          details > summary { cursor: pointer; user-select: none; list-style: none; padding: 4px 0; }
+          details > summary::-webkit-details-marker { display: none; }
+          details > summary::before {
+            content: "▸"; display: inline-block; margin-right: 6px;
+            transition: transform 0.15s; color: var(--secondary-text-color);
+          }
+          details[open] > summary::before { transform: rotate(90deg); }
+          details.adv { grid-column: 1 / -1; }
+          details.adv > summary { font-size: 0.9em; color: var(--secondary-text-color); }
+          .adv-body { display: flex; flex-direction: column; gap: 10px; padding: 8px 0 4px; }
+          .adv-body ha-icon-picker { width: 100%; display: block; }
+          details.section > summary { font-weight: 600; }
         </style>
         <div class="editor">
           <div id="main"></div>
           <div>
             <div class="section-title">Entities</div>
-            <div class="hint">Reorder by dragging the ⠿ handle (or the arrows); per-entity icon, name, colour, size, badge and tap action.</div>
+            <div class="hint">Reorder by dragging the ⠿ handle (or the arrows). Tap “Advanced” on a row for colour, size, badge & templates.</div>
             <div class="entities" id="entities"></div>
             <div class="add-row" id="add"></div>
           </div>
-          <div>
-            <div class="section-title">Sensor row alignment</div>
+          <details class="section">
+            <summary>Sensor row alignment</summary>
             <div class="hint">Keep text values (e.g. “idle”) aligned with numeric ones.</div>
             <div id="align"></div>
-          </div>
+          </details>
         </div>
       `;
         this._mainForm = document.createElement("ha-form");
@@ -1196,6 +1208,18 @@
         )
       );
       row.appendChild(nameField);
+      const adv = document.createElement("details");
+      adv.className = "adv full";
+      const advSummary = document.createElement("summary");
+      advSummary.textContent = "Advanced — colour, size, badge, templates";
+      adv.appendChild(advSummary);
+      const advBody = document.createElement("div");
+      advBody.className = "adv-body";
+      adv.appendChild(advBody);
+      const advHint = document.createElement("div");
+      advHint.className = "hint";
+      advHint.textContent = "Pick a static icon above, or type a Jinja template ({{ … }}) below. Colour & badge colour also accept templates.";
+      advBody.appendChild(advHint);
       const iconTpl = this._field(
         "Icon (template {{ }})",
         iconIsTpl ? conf.icon : "",
@@ -1206,13 +1230,9 @@
           /* silent */
           true
         ),
-        { full: true, placeholder: "{{ 'mdi:fire' if ... }}" }
+        { placeholder: "{{ 'mdi:fire' if ... }}" }
       );
-      row.appendChild(iconTpl);
-      const advancedHint = document.createElement("div");
-      advancedHint.className = "full hint";
-      advancedHint.textContent = "Pick a static icon above, or type a Jinja template ({{ … }}) in the “template” field. Colour & badge colour also accept templates.";
-      row.appendChild(advancedHint);
+      advBody.appendChild(iconTpl);
       const colorField = this._field(
         "Icon colour (optional)",
         conf.color || "",
@@ -1225,7 +1245,7 @@
         ),
         { placeholder: "amber / #ff9800 / {{ … }}" }
       );
-      row.appendChild(colorField);
+      advBody.appendChild(colorField);
       const sizeField = this._field(
         "Icon size %",
         conf.icon_size != null ? conf.icon_size : "",
@@ -1238,13 +1258,12 @@
         ),
         { type: "number", min: 10, max: 400 }
       );
-      row.appendChild(sizeField);
+      advBody.appendChild(sizeField);
       const badgeIsTpl = isTemplate(conf.badge_icon);
       const badgeIconPicker = document.createElement("ha-icon-picker");
       badgeIconPicker.hass = this._hass;
       badgeIconPicker.value = badgeIsTpl ? "" : conf.badge_icon || "";
       badgeIconPicker.label = "Badge icon (optional)";
-      badgeIconPicker.classList.add("full");
       badgeIconPicker.addEventListener("value-changed", (ev) => {
         ev.stopPropagation();
         const v = ev.detail.value;
@@ -1252,7 +1271,7 @@
         if (!v && isTemplate(current)) return;
         this._updateEntity(index, "badge_icon", v);
       });
-      row.appendChild(badgeIconPicker);
+      advBody.appendChild(badgeIconPicker);
       const badgeIconTpl = this._field(
         "Badge icon (template {{ }})",
         badgeIsTpl ? conf.badge_icon : "",
@@ -1263,9 +1282,9 @@
           /* silent */
           true
         ),
-        { full: true, placeholder: "{{ 'mdi:alert' if ... }}" }
+        { placeholder: "{{ 'mdi:alert' if ... }}" }
       );
-      row.appendChild(badgeIconTpl);
+      advBody.appendChild(badgeIconTpl);
       const badgeColorField = this._field(
         "Badge colour / condition (optional)",
         conf.badge_color || "",
@@ -1276,9 +1295,10 @@
           /* silent */
           true
         ),
-        { full: true, placeholder: "red / {{ 'red' if ... else 'none' }}" }
+        { placeholder: "red / {{ 'red' if ... else 'none' }}" }
       );
-      row.appendChild(badgeColorField);
+      advBody.appendChild(badgeColorField);
+      row.appendChild(adv);
       const actionSelector = document.createElement("ha-selector");
       actionSelector.hass = this._hass;
       actionSelector.selector = { ui_action: {} };
@@ -1437,7 +1457,7 @@
   };
 
   // src/minimalistic-area-card-plus/minimalistic-area-card-plus.js
-  var VERSION2 = true ? "0.2.5" : "dev";
+  var VERSION2 = true ? "0.2.6" : "dev";
   var CARD_TYPE = "minimalistic-area-card-plus";
   var EDITOR_TYPE = "minimalistic-area-card-plus-editor";
   var UNAVAILABLE = "unavailable";
@@ -2107,7 +2127,7 @@
   );
 
   // src/index.js
-  var VERSION3 = true ? "0.2.5" : "dev";
+  var VERSION3 = true ? "0.2.6" : "dev";
   console.info(
     `%c LOVELACE-CARD-PACK %c v${VERSION3} `,
     "color: white; background: #6d28d9; font-weight: 700; border-radius: 3px 0 0 3px;",
