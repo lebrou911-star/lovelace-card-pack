@@ -49,6 +49,7 @@ area: living_room          # optional; auto-fills entities from the area
 image: /local/rooms/living_room.jpg   # or a full URL; omit to use the area picture
 darken_image: true
 shadow: true
+icon_size: 100             # default icon size, % of the normal look (100 = unchanged)
 entities:
   - light.living_room
   - switch.tv
@@ -56,6 +57,18 @@ entities:
     name: Temp
   - entity: sensor.living_room_humidity
     icon: mdi:water-percent
+  # --- per-entity colour, size, badge & templates (the new bits) ---
+  - entity: light.desk
+    color: amber                       # fixed icon colour…
+    icon_size: 130                     # …bigger than the rest
+  - entity: binary_sensor.front_door
+    # conditional colour + a badge that only shows when the door is open
+    color: "{{ 'red' if is_state('binary_sensor.front_door','on') else 'grey' }}"
+    badge_icon: mdi:alert
+    badge_color: "{{ 'red' if is_state('binary_sensor.front_door','on') else 'none' }}"
+  - entity: sensor.phone_battery
+    # badge appears only when the battery is low
+    badge_color: "{{ 'orange' if states('sensor.phone_battery')|int < 20 else 'none' }}"
   - entity: media_player.living_room   # text state like "idle"
 # --- bottom sensor row alignment (the painful part, solved) ---
 item_align: middle         # top | middle | bottom | baseline
@@ -79,6 +92,30 @@ visual editor:
 | `value_wrap` | `wrap` / `nowrap` | `nowrap` keeps each value on one line (truncated with `…`) so rows stay even. |
 | `value_min_width` | px (`0` = auto) | Reserve a fixed width for the value, so `idle` and `21.4 °C` line up. |
 | `sensor_columns` | `0` = inline, `N` = grid | Lay sensors out in an aligned grid of `N` columns. |
+
+#### Per-entity colour, badges, size & templates
+
+These options live on each entry in `entities:` (and `icon_size` also works
+card-wide). All are in the visual editor too.
+
+| Option | Scope | Effect |
+| ------ | ----- | ------ |
+| `color` | per entity | Fixed or conditional icon colour (named, `#hex`, or a template). Overrides the default state colouring. |
+| `icon_size` | card + per entity | Icon size as a **%** of the normal look. `100` = unchanged; per-entity value overrides the card default. |
+| `badge_icon` | per entity | Optional `mdi:` icon shown in a small badge over the icon's top-right corner. |
+| `badge_color` | per entity | Badge colour. A value of `none` / `transparent` / empty **hides** the badge — pair with a template for conditional alerts (door open, low battery…). |
+
+**Templates** — `color`, `icon`, `name`, `badge_icon`, `badge_color`, `image`
+and `background_color` accept [Home Assistant Jinja templates](https://www.home-assistant.io/docs/configuration/templating/).
+They render live over the websocket and update the card whenever their result
+changes:
+
+```yaml
+- entity: binary_sensor.front_door
+  color: "{{ 'red' if is_state('binary_sensor.front_door','on') else 'grey' }}"
+  badge_icon: mdi:alert
+  badge_color: "{{ 'red' if is_state('binary_sensor.front_door','on') else 'none' }}"
+```
 
 Config keys map directly to the visual editor, so you can switch between UI and
 YAML freely.

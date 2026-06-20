@@ -3,6 +3,24 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.2.0] - 2026-06-20
+
+### Added
+- `minimalistic-area-card-plus`: four new per-entity / card options, all exposed
+  in the visual editor:
+  - **Icon colour** (`color`) — a fixed or conditional colour for an entity's
+    icon, overriding the default state colouring.
+  - **Badge / pill** (`badge_icon`, `badge_color`) — a small indicator over an
+    icon's top-right corner (e.g. door open, low battery, alert). A badge colour
+    that resolves to empty / `none` hides the badge, so conditions can show or
+    hide it.
+  - **Icon size** (`icon_size`) — size as a percentage of the normal look
+    (`100` = unchanged). Settable card-wide and overridable per entity.
+  - **Jinja templates** — `color`, `icon`, `name`, `badge_icon`, `badge_color`,
+    `image` and `background_color` now accept Home Assistant templates
+    (`{{ … }}` / `{% … %}`), rendered live over the websocket and re-rendered
+    when their result changes.
+
 ## [0.1.5] - 2024-06-19
 
 ### Fixed
@@ -72,6 +90,7 @@ one shot via HACS.
   - alignment controls for the bottom sensor row so text-valued states
     (e.g. `idle`) stay aligned with numeric ones.
 
+[0.2.0]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.2.0
 [0.1.5]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.1.5
 [0.1.4]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.1.4
 [0.1.3]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.1.3

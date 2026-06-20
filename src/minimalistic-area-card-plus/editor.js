@@ -48,6 +48,15 @@ const MAIN_SCHEMA = [
     ],
   },
   {
+    type: "grid",
+    schema: [
+      {
+        name: "icon_size",
+        selector: { number: { min: 10, max: 400, step: 1, mode: "box", unit_of_measurement: "%" } },
+      },
+    ],
+  },
+  {
     name: "interactions",
     type: "expandable",
     iconPath:
@@ -130,6 +139,7 @@ const LABELS = {
   shadow: "Icon shadow",
   state_color: "Color icons by state",
   hide_unavailable: "Hide unavailable",
+  icon_size: "Icon size (%)",
   interactions: "Card interactions",
   tap_action: "Tap action",
   hold_action: "Hold action",
@@ -142,6 +152,7 @@ const LABELS = {
 };
 
 const HELPERS = {
+  icon_size: "Default icon size, as a % of the normal look. 100 = unchanged. Override per entity below.",
   item_align: "Vertical alignment of each icon + value pair in the bottom row.",
   value_justify: "How the value text sits within its column.",
   value_wrap: "Truncate keeps text on one line so rows stay aligned.",
@@ -239,6 +250,7 @@ class MinimalisticAreaCardPlusEditor extends HTMLElement {
       this._mainForm = document.createElement("ha-form");
       this._mainForm.schema = MAIN_SCHEMA;
       this._mainForm.computeLabel = this._computeLabel;
+      this._mainForm.computeHelper = this._computeHelper;
       this._mainForm.addEventListener("value-changed", (ev) => {
         ev.stopPropagation();
         this._emit(ev.detail.value);
@@ -321,6 +333,58 @@ class MinimalisticAreaCardPlusEditor extends HTMLElement {
     });
     row.appendChild(nameField);
 
+    const advancedHint = document.createElement("div");
+    advancedHint.className = "full hint";
+    advancedHint.textContent = "Colour, size & badge — Jinja templates ({{ … }}) allowed for colour, icon & badge.";
+    row.appendChild(advancedHint);
+
+    const colorField = document.createElement("ha-textfield");
+    colorField.label = "Icon colour (optional)";
+    colorField.value = conf.color || "";
+    colorField.addEventListener("input", (ev) => {
+      this._updateEntity(index, "color", ev.target.value, /* silent */ true);
+    });
+    colorField.addEventListener("change", (ev) => {
+      this._updateEntity(index, "color", ev.target.value);
+    });
+    row.appendChild(colorField);
+
+    const sizeField = document.createElement("ha-textfield");
+    sizeField.label = "Icon size %";
+    sizeField.type = "number";
+    sizeField.value = conf.icon_size != null ? conf.icon_size : "";
+    const sizeVal = (raw) => (raw === "" || raw == null ? "" : Number(raw));
+    sizeField.addEventListener("input", (ev) => {
+      this._updateEntity(index, "icon_size", sizeVal(ev.target.value), /* silent */ true);
+    });
+    sizeField.addEventListener("change", (ev) => {
+      this._updateEntity(index, "icon_size", sizeVal(ev.target.value));
+    });
+    row.appendChild(sizeField);
+
+    const badgeIconPicker = document.createElement("ha-icon-picker");
+    badgeIconPicker.hass = this._hass;
+    badgeIconPicker.value = conf.badge_icon || "";
+    badgeIconPicker.label = "Badge icon (optional)";
+    badgeIconPicker.classList.add("full");
+    badgeIconPicker.addEventListener("value-changed", (ev) => {
+      ev.stopPropagation();
+      this._updateEntity(index, "badge_icon", ev.detail.value);
+    });
+    row.appendChild(badgeIconPicker);
+
+    const badgeColorField = document.createElement("ha-textfield");
+    badgeColorField.label = "Badge colour / condition (optional)";
+    badgeColorField.classList.add("full");
+    badgeColorField.value = conf.badge_color || "";
+    badgeColorField.addEventListener("input", (ev) => {
+      this._updateEntity(index, "badge_color", ev.target.value, /* silent */ true);
+    });
+    badgeColorField.addEventListener("change", (ev) => {
+      this._updateEntity(index, "badge_color", ev.target.value);
+    });
+    row.appendChild(badgeColorField);
+
     const actionSelector = document.createElement("ha-selector");
     actionSelector.hass = this._hass;
     actionSelector.selector = { ui_action: {} };
@@ -343,6 +407,7 @@ class MinimalisticAreaCardPlusEditor extends HTMLElement {
 
     row._entityPicker = entityPicker;
     row._iconPicker = iconPicker;
+    row._badgeIconPicker = badgeIconPicker;
     return row;
   }
 
@@ -384,6 +449,7 @@ class MinimalisticAreaCardPlusEditor extends HTMLElement {
     for (const row of this._entitiesEl.children) {
       if (row._entityPicker) row._entityPicker.hass = this._hass;
       if (row._iconPicker) row._iconPicker.hass = this._hass;
+      if (row._badgeIconPicker) row._badgeIconPicker.hass = this._hass;
     }
   }
 

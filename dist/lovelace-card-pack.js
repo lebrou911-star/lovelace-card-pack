@@ -1,4 +1,4 @@
-/*! lovelace-card-pack v0.1.5 | https://github.com/lebrou911-star/lovelace-card-pack */
+/*! lovelace-card-pack v0.2.0 | https://github.com/lebrou911-star/lovelace-card-pack */
 (() => {
   var __defProp = Object.defineProperty;
   var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
@@ -872,6 +872,15 @@
       ]
     },
     {
+      type: "grid",
+      schema: [
+        {
+          name: "icon_size",
+          selector: { number: { min: 10, max: 400, step: 1, mode: "box", unit_of_measurement: "%" } }
+        }
+      ]
+    },
+    {
       name: "interactions",
       type: "expandable",
       iconPath: "M11,9H13V7H11M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M11,17H13V11H11V17Z",
@@ -950,6 +959,7 @@
     shadow: "Icon shadow",
     state_color: "Color icons by state",
     hide_unavailable: "Hide unavailable",
+    icon_size: "Icon size (%)",
     interactions: "Card interactions",
     tap_action: "Tap action",
     hold_action: "Hold action",
@@ -961,6 +971,7 @@
     sensor_columns: "Sensor columns"
   };
   var HELPERS = {
+    icon_size: "Default icon size, as a % of the normal look. 100 = unchanged. Override per entity below.",
     item_align: "Vertical alignment of each icon + value pair in the bottom row.",
     value_justify: "How the value text sits within its column.",
     value_wrap: "Truncate keeps text on one line so rows stay aligned.",
@@ -1048,6 +1059,7 @@
         this._mainForm = document.createElement("ha-form");
         this._mainForm.schema = MAIN_SCHEMA;
         this._mainForm.computeLabel = this._computeLabel;
+        this._mainForm.computeHelper = this._computeHelper;
         this._mainForm.addEventListener("value-changed", (ev) => {
           ev.stopPropagation();
           this._emit(ev.detail.value);
@@ -1121,6 +1133,71 @@
         this._updateEntity(index, "name", ev.target.value);
       });
       row.appendChild(nameField);
+      const advancedHint = document.createElement("div");
+      advancedHint.className = "full hint";
+      advancedHint.textContent = "Colour, size & badge — Jinja templates ({{ … }}) allowed for colour, icon & badge.";
+      row.appendChild(advancedHint);
+      const colorField = document.createElement("ha-textfield");
+      colorField.label = "Icon colour (optional)";
+      colorField.value = conf.color || "";
+      colorField.addEventListener("input", (ev) => {
+        this._updateEntity(
+          index,
+          "color",
+          ev.target.value,
+          /* silent */
+          true
+        );
+      });
+      colorField.addEventListener("change", (ev) => {
+        this._updateEntity(index, "color", ev.target.value);
+      });
+      row.appendChild(colorField);
+      const sizeField = document.createElement("ha-textfield");
+      sizeField.label = "Icon size %";
+      sizeField.type = "number";
+      sizeField.value = conf.icon_size != null ? conf.icon_size : "";
+      const sizeVal = (raw) => raw === "" || raw == null ? "" : Number(raw);
+      sizeField.addEventListener("input", (ev) => {
+        this._updateEntity(
+          index,
+          "icon_size",
+          sizeVal(ev.target.value),
+          /* silent */
+          true
+        );
+      });
+      sizeField.addEventListener("change", (ev) => {
+        this._updateEntity(index, "icon_size", sizeVal(ev.target.value));
+      });
+      row.appendChild(sizeField);
+      const badgeIconPicker = document.createElement("ha-icon-picker");
+      badgeIconPicker.hass = this._hass;
+      badgeIconPicker.value = conf.badge_icon || "";
+      badgeIconPicker.label = "Badge icon (optional)";
+      badgeIconPicker.classList.add("full");
+      badgeIconPicker.addEventListener("value-changed", (ev) => {
+        ev.stopPropagation();
+        this._updateEntity(index, "badge_icon", ev.detail.value);
+      });
+      row.appendChild(badgeIconPicker);
+      const badgeColorField = document.createElement("ha-textfield");
+      badgeColorField.label = "Badge colour / condition (optional)";
+      badgeColorField.classList.add("full");
+      badgeColorField.value = conf.badge_color || "";
+      badgeColorField.addEventListener("input", (ev) => {
+        this._updateEntity(
+          index,
+          "badge_color",
+          ev.target.value,
+          /* silent */
+          true
+        );
+      });
+      badgeColorField.addEventListener("change", (ev) => {
+        this._updateEntity(index, "badge_color", ev.target.value);
+      });
+      row.appendChild(badgeColorField);
       const actionSelector = document.createElement("ha-selector");
       actionSelector.hass = this._hass;
       actionSelector.selector = { ui_action: {} };
@@ -1140,6 +1217,7 @@
       row.appendChild(tools);
       row._entityPicker = entityPicker;
       row._iconPicker = iconPicker;
+      row._badgeIconPicker = badgeIconPicker;
       return row;
     }
     _toolButton(path, label, disabled, onClick) {
@@ -1178,6 +1256,7 @@
       for (const row of this._entitiesEl.children) {
         if (row._entityPicker) row._entityPicker.hass = this._hass;
         if (row._iconPicker) row._iconPicker.hass = this._hass;
+        if (row._badgeIconPicker) row._badgeIconPicker.hass = this._hass;
       }
     }
     _normalizeEntity(item) {
@@ -1213,7 +1292,7 @@
   };
 
   // src/minimalistic-area-card-plus/minimalistic-area-card-plus.js
-  var VERSION2 = true ? "0.1.5" : "dev";
+  var VERSION2 = true ? "0.2.0" : "dev";
   var CARD_TYPE = "minimalistic-area-card-plus";
   var EDITOR_TYPE = "minimalistic-area-card-plus-editor";
   var UNAVAILABLE = "unavailable";
@@ -1328,6 +1407,10 @@
       this._area = void 0;
       this._areaEntities = void 0;
       this._built = false;
+      this._tpl = /* @__PURE__ */ new Map();
+    }
+    disconnectedCallback() {
+      this._clearTemplates();
     }
     static getConfigElement() {
       return document.createElement(EDITOR_TYPE);
@@ -1348,6 +1431,7 @@
       }
       this._config = { hold_action: { action: "more-info" }, ...config };
       this._built = false;
+      this._clearTemplates();
       if (this._hass) this._render();
     }
     getCardSize() {
@@ -1402,6 +1486,51 @@
       }
       return { sensor, buttons };
     }
+    /* ----- Jinja templates ----- */
+    // True if a config value looks like a Home Assistant Jinja template.
+    static _isTemplate(value) {
+      return typeof value === "string" && /\{\{|\{%|\{#/.test(value);
+    }
+    // Resolve a config value: plain strings pass through; templates return their
+    // last rendered result (subscribing on first sight). Returns "" until the
+    // first render arrives so the card never shows raw `{{ ... }}`.
+    _resolve(value) {
+      if (!_MinimalisticAreaCardPlus._isTemplate(value)) return value;
+      this._subscribeTemplate(value);
+      const entry = this._tpl.get(value);
+      return entry && entry.result !== void 0 ? entry.result : "";
+    }
+    _subscribeTemplate(str) {
+      let entry = this._tpl.get(str);
+      if (!entry) {
+        entry = { result: void 0, unsub: null, subscribed: false };
+        this._tpl.set(str, entry);
+      }
+      if (entry.subscribed || !this._hass || !this._hass.connection) return;
+      entry.subscribed = true;
+      this._hass.connection.subscribeMessage(
+        (msg) => {
+          entry.result = msg.result;
+          this._render();
+        },
+        { type: "render_template", template: str, report_errors: true }
+      ).then((unsub) => {
+        entry.unsub = unsub;
+      }).catch(() => {
+        entry.subscribed = false;
+      });
+    }
+    _clearTemplates() {
+      for (const entry of this._tpl.values()) {
+        if (typeof entry.unsub === "function") {
+          try {
+            entry.unsub();
+          } catch (_e) {
+          }
+        }
+      }
+      this._tpl.clear();
+    }
     _shouldUpdate(oldHass) {
       if (!oldHass) return true;
       if (oldHass.themes !== this._hass.themes || oldHass.locale !== this._hass.locale) return true;
@@ -1432,14 +1561,15 @@
       }
       const cfg = this._config;
       const hass = this._hass;
-      this._card.style.backgroundColor = cfg.background_color || "";
+      this._card.style.backgroundColor = this._resolve(cfg.background_color) || "";
+      const configImage = this._resolve(cfg.image);
       let imageUrl;
-      if (!cfg.camera_image && (cfg.image || ((_a = this._area) == null ? void 0 : _a.picture))) {
+      if (!cfg.camera_image && (configImage || ((_a = this._area) == null ? void 0 : _a.picture))) {
         try {
           const base = ((_c = (_b = hass.auth) == null ? void 0 : _b.data) == null ? void 0 : _c.hassUrl) || "";
-          imageUrl = new URL(cfg.image || this._area.picture, base || window.location.origin).toString();
+          imageUrl = new URL(configImage || this._area.picture, base || window.location.origin).toString();
         } catch (_e) {
-          imageUrl = cfg.image || ((_d = this._area) == null ? void 0 : _d.picture);
+          imageUrl = configImage || ((_d = this._area) == null ? void 0 : _d.picture);
         }
       }
       const { sensor, buttons } = this._classifyEntities();
@@ -1516,20 +1646,40 @@
         return wrapper2;
       }
       const active = stateObj.state && STATES_OFF.indexOf(String(stateObj.state).toLowerCase()) === -1;
-      const friendly = ((_a = stateObj.attributes) == null ? void 0 : _a.friendly_name) || stateObj.entity_id;
+      const resolvedName = this._resolve(entityConf.name);
+      const friendly = resolvedName || ((_a = stateObj.attributes) == null ? void 0 : _a.friendly_name) || stateObj.entity_id;
+      const resolvedIcon = this._resolve(entityConf.icon);
+      const resolvedColor = this._resolve(entityConf.color);
       const wrapper = document.createElement("div");
       wrapper.className = "wrapper";
       if (isSensor && align && align.itemAlign) wrapper.style.alignItems = align.itemAlign;
       const iconButton = document.createElement("ha-icon-button");
       iconButton.className = active ? "state-on" : "";
+      const sizePct = Number(entityConf.icon_size != null ? entityConf.icon_size : cfg.icon_size);
+      const factor = isFinite(sizePct) && sizePct > 0 ? sizePct / 100 : 1;
+      const zoom = (isSensor ? 0.67 : 1) * factor;
+      if (zoom !== 1) {
+        iconButton.style.zoom = String(zoom);
+        iconButton.style.MozTransform = `scale(${zoom})`;
+      }
       const badge = document.createElement("state-badge");
       badge.hass = hass;
       badge.stateObj = stateObj;
       badge.title = friendly;
-      if (entityConf.icon) badge.overrideIcon = entityConf.icon;
-      badge.stateColor = entityConf.state_color !== void 0 ? entityConf.state_color : cfg.state_color !== void 0 ? cfg.state_color : true;
+      if (resolvedIcon) badge.overrideIcon = resolvedIcon;
+      if (resolvedColor) {
+        badge.stateColor = false;
+        badge.style.color = resolvedColor;
+      } else {
+        badge.stateColor = entityConf.state_color !== void 0 ? entityConf.state_color : cfg.state_color !== void 0 ? cfg.state_color : true;
+      }
       if (cfg.shadow) badge.className = "shadow";
+      const iconWrap = document.createElement("div");
+      iconWrap.className = "icon-wrap";
       iconButton.appendChild(badge);
+      iconWrap.appendChild(iconButton);
+      const badgeEl = this._buildBadge(entityConf);
+      if (badgeEl) iconWrap.appendChild(badgeEl);
       attachAction(
         iconButton,
         { hasHold: hasAction(entityConf.hold_action), hasDoubleClick: hasAction(entityConf.double_tap_action) },
@@ -1538,7 +1688,7 @@
           handleAction(this, hass, actionConfig, entityConf.entity);
         }
       );
-      wrapper.appendChild(iconButton);
+      wrapper.appendChild(iconWrap);
       if (isSensor && entityConf.show_state) {
         const state = document.createElement("div");
         state.className = "state";
@@ -1562,6 +1712,27 @@
         wrapper.appendChild(state);
       }
       return wrapper;
+    }
+    // Build the optional badge/pill shown over an icon. Driven by badge_color
+    // and/or badge_icon (both template-aware). A template that resolves to an
+    // empty / "none" colour hides the badge — handy for conditional alerts.
+    _buildBadge(entityConf) {
+      const color = this._resolve(entityConf.badge_color);
+      const icon = this._resolve(entityConf.badge_icon);
+      const colorStr = color == null ? "" : String(color).trim();
+      const iconStr = icon == null ? "" : String(icon).trim();
+      const hidden = ["", "none", "transparent", "false", "off"].indexOf(colorStr.toLowerCase()) !== -1;
+      if (hidden && !iconStr) return null;
+      const badge = document.createElement("div");
+      badge.className = "badge";
+      if (!hidden) badge.style.background = colorStr;
+      if (iconStr) {
+        const haIcon = document.createElement("ha-icon");
+        haIcon.icon = iconStr;
+        badge.appendChild(haIcon);
+        badge.classList.add("has-icon");
+      }
+      return badge;
     }
     _handleThisAction(actionName) {
       const cfg = this._config;
@@ -1692,9 +1863,42 @@
         margin-right: -6px;
       }
       .box .sensors ha-icon-button {
-        -moz-transform: scale(0.67);
-        zoom: 0.67;
+        /* Size is applied inline (icon_size %); keep alignment here. */
         vertical-align: middle;
+      }
+      .box .icon-wrap {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .box .badge {
+        position: absolute;
+        top: 0;
+        right: 0;
+        min-width: 12px;
+        height: 12px;
+        border-radius: 7px;
+        background: var(--primary-color, #03a9f4);
+        box-shadow: 0 0 0 1.5px var(--ha-card-background, var(--card-background-color, #1c1c1c));
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        pointer-events: none;
+        box-sizing: border-box;
+      }
+      .box .badge.has-icon {
+        padding: 1px;
+        min-width: 16px;
+        height: 16px;
+        border-radius: 9px;
+      }
+      .box .badge ha-icon {
+        --mdc-icon-size: 12px;
+        width: 12px;
+        height: 12px;
+        display: inline-flex;
       }
       .box .wrapper {
         display: inline-flex;
@@ -1751,7 +1955,7 @@
   );
 
   // src/index.js
-  var VERSION3 = true ? "0.1.5" : "dev";
+  var VERSION3 = true ? "0.2.0" : "dev";
   console.info(
     `%c LOVELACE-CARD-PACK %c v${VERSION3} `,
     "color: white; background: #6d28d9; font-weight: 700; border-radius: 3px 0 0 3px;",

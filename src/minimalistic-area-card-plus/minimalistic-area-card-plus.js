@@ -154,6 +154,12 @@ class MinimalisticAreaCardPlus extends HTMLElement {
     this._area = undefined;
     this._areaEntities = undefined;
     this._built = false;
+    // Live Jinja template subscriptions: template string -> { result, unsub, subscribed }.
+    this._tpl = new Map();
+  }
+
+  disconnectedCallback() {
+    this._clearTemplates();
   }
 
   static getConfigElement() {
@@ -177,6 +183,9 @@ class MinimalisticAreaCardPlus extends HTMLElement {
     }
     this._config = { hold_action: { action: "more-info" }, ...config };
     this._built = false;
+    // Drop subscriptions tied to the previous config; the next render re-subscribes
+    // only the templates the new config actually references.
+    this._clearTemplates();
     if (this._hass) this._render();
   }
 
@@ -248,6 +257,61 @@ class MinimalisticAreaCardPlus extends HTMLElement {
     return { sensor, buttons };
   }
 
+  /* ----- Jinja templates ----- */
+
+  // True if a config value looks like a Home Assistant Jinja template.
+  static _isTemplate(value) {
+    return typeof value === "string" && /\{\{|\{%|\{#/.test(value);
+  }
+
+  // Resolve a config value: plain strings pass through; templates return their
+  // last rendered result (subscribing on first sight). Returns "" until the
+  // first render arrives so the card never shows raw `{{ ... }}`.
+  _resolve(value) {
+    if (!MinimalisticAreaCardPlus._isTemplate(value)) return value;
+    this._subscribeTemplate(value);
+    const entry = this._tpl.get(value);
+    return entry && entry.result !== undefined ? entry.result : "";
+  }
+
+  _subscribeTemplate(str) {
+    let entry = this._tpl.get(str);
+    if (!entry) {
+      entry = { result: undefined, unsub: null, subscribed: false };
+      this._tpl.set(str, entry);
+    }
+    if (entry.subscribed || !this._hass || !this._hass.connection) return;
+    entry.subscribed = true;
+    this._hass.connection
+      .subscribeMessage(
+        (msg) => {
+          entry.result = msg.result;
+          this._render();
+        },
+        { type: "render_template", template: str, report_errors: true }
+      )
+      .then((unsub) => {
+        entry.unsub = unsub;
+      })
+      .catch(() => {
+        // Allow a later render to retry (e.g. connection not ready yet).
+        entry.subscribed = false;
+      });
+  }
+
+  _clearTemplates() {
+    for (const entry of this._tpl.values()) {
+      if (typeof entry.unsub === "function") {
+        try {
+          entry.unsub();
+        } catch (_e) {
+          /* ignore */
+        }
+      }
+    }
+    this._tpl.clear();
+  }
+
   _shouldUpdate(oldHass) {
     if (!oldHass) return true;
     if (oldHass.themes !== this._hass.themes || oldHass.locale !== this._hass.locale) return true;
@@ -283,17 +347,18 @@ class MinimalisticAreaCardPlus extends HTMLElement {
     const cfg = this._config;
     const hass = this._hass;
 
-    // Background colour
-    this._card.style.backgroundColor = cfg.background_color || "";
+    // Background colour (template-aware)
+    this._card.style.backgroundColor = this._resolve(cfg.background_color) || "";
 
-    // Resolve background image / camera
+    // Resolve background image / camera (image may be a template, e.g. day/night)
+    const configImage = this._resolve(cfg.image);
     let imageUrl;
-    if (!cfg.camera_image && (cfg.image || this._area?.picture)) {
+    if (!cfg.camera_image && (configImage || this._area?.picture)) {
       try {
         const base = hass.auth?.data?.hassUrl || "";
-        imageUrl = new URL(cfg.image || this._area.picture, base || window.location.origin).toString();
+        imageUrl = new URL(configImage || this._area.picture, base || window.location.origin).toString();
       } catch (_e) {
-        imageUrl = cfg.image || this._area?.picture;
+        imageUrl = configImage || this._area?.picture;
       }
     }
 
@@ -384,7 +449,13 @@ class MinimalisticAreaCardPlus extends HTMLElement {
     }
 
     const active = stateObj.state && STATES_OFF.indexOf(String(stateObj.state).toLowerCase()) === -1;
-    const friendly = stateObj.attributes?.friendly_name || stateObj.entity_id;
+    // Name (template-aware) overrides the entity's friendly name for the tooltip.
+    const resolvedName = this._resolve(entityConf.name);
+    const friendly = resolvedName || stateObj.attributes?.friendly_name || stateObj.entity_id;
+
+    // Per-entity overrides (each may be a Jinja template).
+    const resolvedIcon = this._resolve(entityConf.icon);
+    const resolvedColor = this._resolve(entityConf.color);
 
     const wrapper = document.createElement("div");
     wrapper.className = "wrapper";
@@ -392,19 +463,44 @@ class MinimalisticAreaCardPlus extends HTMLElement {
 
     const iconButton = document.createElement("ha-icon-button");
     iconButton.className = active ? "state-on" : "";
+
+    // Icon size as a percentage of the default look (100% = unchanged). The
+    // sensor row keeps its smaller 0.67 baseline; the action row starts at 1.
+    const sizePct = Number(entityConf.icon_size != null ? entityConf.icon_size : cfg.icon_size);
+    const factor = isFinite(sizePct) && sizePct > 0 ? sizePct / 100 : 1;
+    const zoom = (isSensor ? 0.67 : 1) * factor;
+    if (zoom !== 1) {
+      iconButton.style.zoom = String(zoom);
+      iconButton.style.MozTransform = `scale(${zoom})`;
+    }
+
     const badge = document.createElement("state-badge");
     badge.hass = hass;
     badge.stateObj = stateObj;
     badge.title = friendly;
-    if (entityConf.icon) badge.overrideIcon = entityConf.icon;
-    badge.stateColor =
-      entityConf.state_color !== undefined
-        ? entityConf.state_color
-        : cfg.state_color !== undefined
-        ? cfg.state_color
-        : true;
+    if (resolvedIcon) badge.overrideIcon = resolvedIcon;
+    if (resolvedColor) {
+      // A fixed/conditional colour wins over state-based colouring.
+      badge.stateColor = false;
+      badge.style.color = resolvedColor;
+    } else {
+      badge.stateColor =
+        entityConf.state_color !== undefined
+          ? entityConf.state_color
+          : cfg.state_color !== undefined
+          ? cfg.state_color
+          : true;
+    }
     if (cfg.shadow) badge.className = "shadow";
+
+    // Wrap the icon so a badge/pill can be positioned over its top-right corner.
+    const iconWrap = document.createElement("div");
+    iconWrap.className = "icon-wrap";
     iconButton.appendChild(badge);
+    iconWrap.appendChild(iconButton);
+
+    const badgeEl = this._buildBadge(entityConf);
+    if (badgeEl) iconWrap.appendChild(badgeEl);
 
     attachAction(
       iconButton,
@@ -414,7 +510,7 @@ class MinimalisticAreaCardPlus extends HTMLElement {
         handleAction(this, hass, actionConfig, entityConf.entity);
       }
     );
-    wrapper.appendChild(iconButton);
+    wrapper.appendChild(iconWrap);
 
     if (isSensor && entityConf.show_state) {
       const state = document.createElement("div");
@@ -440,6 +536,29 @@ class MinimalisticAreaCardPlus extends HTMLElement {
     }
 
     return wrapper;
+  }
+
+  // Build the optional badge/pill shown over an icon. Driven by badge_color
+  // and/or badge_icon (both template-aware). A template that resolves to an
+  // empty / "none" colour hides the badge — handy for conditional alerts.
+  _buildBadge(entityConf) {
+    const color = this._resolve(entityConf.badge_color);
+    const icon = this._resolve(entityConf.badge_icon);
+    const colorStr = color == null ? "" : String(color).trim();
+    const iconStr = icon == null ? "" : String(icon).trim();
+    const hidden = ["", "none", "transparent", "false", "off"].indexOf(colorStr.toLowerCase()) !== -1;
+    if (hidden && !iconStr) return null;
+
+    const badge = document.createElement("div");
+    badge.className = "badge";
+    if (!hidden) badge.style.background = colorStr;
+    if (iconStr) {
+      const haIcon = document.createElement("ha-icon");
+      haIcon.icon = iconStr;
+      badge.appendChild(haIcon);
+      badge.classList.add("has-icon");
+    }
+    return badge;
   }
 
   _handleThisAction(actionName) {
@@ -580,9 +699,42 @@ class MinimalisticAreaCardPlus extends HTMLElement {
         margin-right: -6px;
       }
       .box .sensors ha-icon-button {
-        -moz-transform: scale(0.67);
-        zoom: 0.67;
+        /* Size is applied inline (icon_size %); keep alignment here. */
         vertical-align: middle;
+      }
+      .box .icon-wrap {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .box .badge {
+        position: absolute;
+        top: 0;
+        right: 0;
+        min-width: 12px;
+        height: 12px;
+        border-radius: 7px;
+        background: var(--primary-color, #03a9f4);
+        box-shadow: 0 0 0 1.5px var(--ha-card-background, var(--card-background-color, #1c1c1c));
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        pointer-events: none;
+        box-sizing: border-box;
+      }
+      .box .badge.has-icon {
+        padding: 1px;
+        min-width: 16px;
+        height: 16px;
+        border-radius: 9px;
+      }
+      .box .badge ha-icon {
+        --mdc-icon-size: 12px;
+        width: 12px;
+        height: 12px;
+        display: inline-flex;
       }
       .box .wrapper {
         display: inline-flex;
