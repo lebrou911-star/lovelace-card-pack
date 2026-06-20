@@ -3,6 +3,15 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.3.2] - 2026-06-20
+
+### Added
+- `minimalistic-area-card-plus` editor: per-entity **"Ask for confirmation on
+  tap"** checkbox plus a confirmation-text field (in the Advanced section), so a
+  tap confirmation can be set from the UI instead of YAML. Enabling it keeps the
+  entity's existing or default action (e.g. toggle) and adds the confirmation;
+  the action selector no longer wipes a confirmation set this way.
+
 ## [0.3.1] - 2026-06-20
 
 ### Fixed
@@ -194,6 +203,7 @@ one shot via HACS.
   - alignment controls for the bottom sensor row so text-valued states
     (e.g. `idle`) stay aligned with numeric ones.
 
+[0.3.2]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.3.2
 [0.3.1]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.3.1
 [0.3.0]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.3.0
 [0.2.9]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.2.9

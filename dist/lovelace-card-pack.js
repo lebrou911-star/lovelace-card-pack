@@ -1,4 +1,4 @@
-/*! lovelace-card-pack v0.3.1 | https://github.com/lebrou911-star/lovelace-card-pack */
+/*! lovelace-card-pack v0.3.2 | https://github.com/lebrou911-star/lovelace-card-pack */
 (() => {
   var __defProp = Object.defineProperty;
   var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
@@ -1079,6 +1079,8 @@
           }
           .field input::placeholder { color: var(--disabled-text-color, #888); }
           .field input:focus { outline: none; border-color: var(--primary-color, #03a9f4); }
+          .checkfield { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.9em; }
+          .checkfield input { width: 18px; height: 18px; flex: 0 0 auto; accent-color: var(--primary-color, #03a9f4); }
           .hint { color: var(--secondary-text-color); font-size: 0.85em; margin: 0 0 4px; line-height: 1.3; }
           details > summary { cursor: pointer; user-select: none; list-style: none; padding: 4px 0; }
           details > summary::-webkit-details-marker { display: none; }
@@ -1167,6 +1169,50 @@
       wrap.appendChild(input);
       wrap.input = input;
       return wrap;
+    }
+    // A labelled native checkbox wrapped in .checkfield. onChange receives bool.
+    _checkbox(labelText, checked, onChange) {
+      const wrap = document.createElement("label");
+      wrap.className = "checkfield full";
+      const input = document.createElement("input");
+      input.type = "checkbox";
+      input.checked = !!checked;
+      input.addEventListener("change", () => onChange(input.checked));
+      const span = document.createElement("span");
+      span.textContent = labelText;
+      wrap.appendChild(input);
+      wrap.appendChild(span);
+      wrap.input = input;
+      return wrap;
+    }
+    // Default tap action for an entity, mirroring the card's own classification.
+    _defaultAction(entityId) {
+      const domain = String(entityId || "").split(".")[0];
+      const TOGGLE = ["fan", "input_boolean", "light", "switch", "group", "automation", "humidifier"];
+      return TOGGLE.indexOf(domain) !== -1 ? "toggle" : "more-info";
+    }
+    // Add/remove a confirmation on the entity's tap_action without losing the
+    // chosen (or default) action.
+    _applyConfirmation(index, enabled, text) {
+      const conf = this._normalizeEntity(this._entities[index] || {});
+      let ta = conf.tap_action ? { ...conf.tap_action } : void 0;
+      if (enabled) {
+        ta = ta || {};
+        if (!ta.action) ta.action = this._defaultAction(conf.entity);
+        ta.confirmation = text ? { text } : {};
+      } else if (ta) {
+        delete ta.confirmation;
+        if (Object.keys(ta).length === 0) ta = void 0;
+      } else {
+        return;
+      }
+      this._updateEntity(
+        index,
+        "tap_action",
+        ta,
+        /* silent */
+        true
+      );
     }
     _buildEntityRow(item, index, count) {
       const conf = typeof item === "string" ? { entity: item } : { ...item };
@@ -1298,6 +1344,23 @@
         { placeholder: "red / {{ 'red' if ... else 'none' }}" }
       );
       advBody.appendChild(badgeColorField);
+      const hasConfirm = !!(conf.tap_action && conf.tap_action.confirmation);
+      const confirmText = hasConfirm && typeof conf.tap_action.confirmation === "object" ? conf.tap_action.confirmation.text || "" : "";
+      const confText = this._field("Confirmation text (optional)", confirmText, () => {
+      }, {
+        placeholder: "Are you sure?"
+      });
+      const confCheck = this._checkbox(
+        "Ask for confirmation on tap",
+        hasConfirm,
+        (checked) => this._applyConfirmation(index, checked, confText.input.value)
+      );
+      confText.input.addEventListener("input", () => {
+        if (confText.input.value && !confCheck.input.checked) confCheck.input.checked = true;
+        this._applyConfirmation(index, confCheck.input.checked, confText.input.value);
+      });
+      advBody.appendChild(confCheck);
+      advBody.appendChild(confText);
       row.appendChild(adv);
       const actionSelector = document.createElement("ha-selector");
       actionSelector.hass = this._hass;
@@ -1307,8 +1370,13 @@
       actionSelector.classList.add("full");
       actionSelector.addEventListener("value-changed", (ev) => {
         ev.stopPropagation();
-        actionSelector.value = ev.detail.value;
-        this._updateEntity(index, "tap_action", ev.detail.value);
+        let v = ev.detail.value;
+        const existing = this._normalizeEntity(this._entities[index] || {}).tap_action;
+        if (existing && existing.confirmation && v && typeof v === "object" && v.confirmation === void 0) {
+          v = { ...v, confirmation: existing.confirmation };
+        }
+        actionSelector.value = v;
+        this._updateEntity(index, "tap_action", v);
       });
       row.appendChild(actionSelector);
       const tools = document.createElement("div");
@@ -1458,7 +1526,7 @@
   };
 
   // src/minimalistic-area-card-plus/minimalistic-area-card-plus.js
-  var VERSION2 = true ? "0.3.1" : "dev";
+  var VERSION2 = true ? "0.3.2" : "dev";
   var CARD_TYPE = "minimalistic-area-card-plus";
   var EDITOR_TYPE = "minimalistic-area-card-plus-editor";
   var UNAVAILABLE = "unavailable";
@@ -2144,7 +2212,7 @@
   );
 
   // src/index.js
-  var VERSION3 = true ? "0.3.1" : "dev";
+  var VERSION3 = true ? "0.3.2" : "dev";
   console.info(
     `%c LOVELACE-CARD-PACK %c v${VERSION3} `,
     "color: white; background: #6d28d9; font-weight: 700; border-radius: 3px 0 0 3px;",

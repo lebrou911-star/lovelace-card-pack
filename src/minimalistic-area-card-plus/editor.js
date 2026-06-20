@@ -274,6 +274,8 @@ class MinimalisticAreaCardPlusEditor extends HTMLElement {
           }
           .field input::placeholder { color: var(--disabled-text-color, #888); }
           .field input:focus { outline: none; border-color: var(--primary-color, #03a9f4); }
+          .checkfield { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.9em; }
+          .checkfield input { width: 18px; height: 18px; flex: 0 0 auto; accent-color: var(--primary-color, #03a9f4); }
           .hint { color: var(--secondary-text-color); font-size: 0.85em; margin: 0 0 4px; line-height: 1.3; }
           details > summary { cursor: pointer; user-select: none; list-style: none; padding: 4px 0; }
           details > summary::-webkit-details-marker { display: none; }
@@ -373,6 +375,47 @@ class MinimalisticAreaCardPlusEditor extends HTMLElement {
     wrap.appendChild(input);
     wrap.input = input;
     return wrap;
+  }
+
+  // A labelled native checkbox wrapped in .checkfield. onChange receives bool.
+  _checkbox(labelText, checked, onChange) {
+    const wrap = document.createElement("label");
+    wrap.className = "checkfield full";
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.checked = !!checked;
+    input.addEventListener("change", () => onChange(input.checked));
+    const span = document.createElement("span");
+    span.textContent = labelText;
+    wrap.appendChild(input);
+    wrap.appendChild(span);
+    wrap.input = input;
+    return wrap;
+  }
+
+  // Default tap action for an entity, mirroring the card's own classification.
+  _defaultAction(entityId) {
+    const domain = String(entityId || "").split(".")[0];
+    const TOGGLE = ["fan", "input_boolean", "light", "switch", "group", "automation", "humidifier"];
+    return TOGGLE.indexOf(domain) !== -1 ? "toggle" : "more-info";
+  }
+
+  // Add/remove a confirmation on the entity's tap_action without losing the
+  // chosen (or default) action.
+  _applyConfirmation(index, enabled, text) {
+    const conf = this._normalizeEntity(this._entities[index] || {});
+    let ta = conf.tap_action ? { ...conf.tap_action } : undefined;
+    if (enabled) {
+      ta = ta || {};
+      if (!ta.action) ta.action = this._defaultAction(conf.entity);
+      ta.confirmation = text ? { text } : {};
+    } else if (ta) {
+      delete ta.confirmation;
+      if (Object.keys(ta).length === 0) ta = undefined;
+    } else {
+      return;
+    }
+    this._updateEntity(index, "tap_action", ta, /* silent */ true);
   }
 
   _buildEntityRow(item, index, count) {
@@ -485,6 +528,25 @@ class MinimalisticAreaCardPlusEditor extends HTMLElement {
     );
     advBody.appendChild(badgeColorField);
 
+    // Tap confirmation (checkbox + optional text). The text auto-enables the box.
+    const hasConfirm = !!(conf.tap_action && conf.tap_action.confirmation);
+    const confirmText =
+      hasConfirm && typeof conf.tap_action.confirmation === "object"
+        ? conf.tap_action.confirmation.text || ""
+        : "";
+    const confText = this._field("Confirmation text (optional)", confirmText, () => {}, {
+      placeholder: "Are you sure?",
+    });
+    const confCheck = this._checkbox("Ask for confirmation on tap", hasConfirm, (checked) =>
+      this._applyConfirmation(index, checked, confText.input.value)
+    );
+    confText.input.addEventListener("input", () => {
+      if (confText.input.value && !confCheck.input.checked) confCheck.input.checked = true;
+      this._applyConfirmation(index, confCheck.input.checked, confText.input.value);
+    });
+    advBody.appendChild(confCheck);
+    advBody.appendChild(confText);
+
     row.appendChild(adv);
 
     const actionSelector = document.createElement("ha-selector");
@@ -495,10 +557,17 @@ class MinimalisticAreaCardPlusEditor extends HTMLElement {
     actionSelector.classList.add("full");
     actionSelector.addEventListener("value-changed", (ev) => {
       ev.stopPropagation();
+      let v = ev.detail.value;
+      // The ui_action selector doesn't know about `confirmation`; keep any set
+      // via the checkbox below instead of wiping it when the action changes.
+      const existing = this._normalizeEntity(this._entities[index] || {}).tap_action;
+      if (existing && existing.confirmation && v && typeof v === "object" && v.confirmation === undefined) {
+        v = { ...v, confirmation: existing.confirmation };
+      }
       // Feed the value back so the selection sticks: we suppress the row
       // rebuild (to keep input focus), so the selector must hold its own value.
-      actionSelector.value = ev.detail.value;
-      this._updateEntity(index, "tap_action", ev.detail.value);
+      actionSelector.value = v;
+      this._updateEntity(index, "tap_action", v);
     });
     row.appendChild(actionSelector);
 
