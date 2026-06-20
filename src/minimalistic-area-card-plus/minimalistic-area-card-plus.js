@@ -397,7 +397,15 @@ class MinimalisticAreaCardPlus extends HTMLElement {
 
     const header = document.createElement("div");
     header.className = "card-header";
-    header.textContent = cfg.title || "";
+    const titleText = this._resolve(cfg.title);
+    header.textContent = titleText == null ? "" : String(titleText);
+    if (cfg.title_size != null && cfg.title_size !== "") {
+      // A bare number is treated as px; any other CSS length passes through.
+      const ts = String(cfg.title_size).trim();
+      header.style.fontSize = /^[0-9.]+$/.test(ts) ? `${ts}px` : ts;
+    }
+    const titleColor = this._resolve(cfg.title_color);
+    if (titleColor) header.style.color = titleColor;
     box.appendChild(header);
 
     const sensorsEl = document.createElement("div");

@@ -28,6 +28,16 @@ const MAIN_SCHEMA = [
     selector: { text: {} },
   },
   {
+    type: "grid",
+    schema: [
+      {
+        name: "title_size",
+        selector: { number: { min: 0, max: 100, step: 1, mode: "box", unit_of_measurement: "px" } },
+      },
+      { name: "title_color", selector: { text: {} } },
+    ],
+  },
+  {
     name: "area",
     selector: { area: {} },
   },
@@ -132,6 +142,8 @@ const ALIGN_SCHEMA = [
 
 const LABELS = {
   title: "Title",
+  title_size: "Title size (px)",
+  title_color: "Title colour",
   area: "Area",
   image: "Image (URL or /local/…)",
   camera_image: "Camera (optional)",
@@ -152,6 +164,8 @@ const LABELS = {
 };
 
 const HELPERS = {
+  title: "Plain text or a Jinja template, e.g. Salon — {{ states('sensor.temp') }}°.",
+  title_color: "Named colour, #hex, or a template. Leave empty for the default.",
   icon_size: "Default icon size, as a % of the normal look. 100 = unchanged. Override per entity below.",
   item_align: "Vertical alignment of each icon + value pair in the bottom row.",
   value_justify: "How the value text sits within its column.",

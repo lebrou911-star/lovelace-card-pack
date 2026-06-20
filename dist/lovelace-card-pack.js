@@ -852,6 +852,16 @@
       selector: { text: {} }
     },
     {
+      type: "grid",
+      schema: [
+        {
+          name: "title_size",
+          selector: { number: { min: 0, max: 100, step: 1, mode: "box", unit_of_measurement: "px" } }
+        },
+        { name: "title_color", selector: { text: {} } }
+      ]
+    },
+    {
       name: "area",
       selector: { area: {} }
     },
@@ -952,6 +962,8 @@
   ];
   var LABELS = {
     title: "Title",
+    title_size: "Title size (px)",
+    title_color: "Title colour",
     area: "Area",
     image: "Image (URL or /local/…)",
     camera_image: "Camera (optional)",
@@ -971,6 +983,8 @@
     sensor_columns: "Sensor columns"
   };
   var HELPERS = {
+    title: "Plain text or a Jinja template, e.g. Salon — {{ states('sensor.temp') }}°.",
+    title_color: "Named colour, #hex, or a template. Leave empty for the default.",
     icon_size: "Default icon size, as a % of the normal look. 100 = unchanged. Override per entity below.",
     item_align: "Vertical alignment of each icon + value pair in the bottom row.",
     value_justify: "How the value text sits within its column.",
@@ -1600,7 +1614,14 @@
       box.className = "box";
       const header = document.createElement("div");
       header.className = "card-header";
-      header.textContent = cfg.title || "";
+      const titleText = this._resolve(cfg.title);
+      header.textContent = titleText == null ? "" : String(titleText);
+      if (cfg.title_size != null && cfg.title_size !== "") {
+        const ts = String(cfg.title_size).trim();
+        header.style.fontSize = /^[0-9.]+$/.test(ts) ? `${ts}px` : ts;
+      }
+      const titleColor = this._resolve(cfg.title_color);
+      if (titleColor) header.style.color = titleColor;
       box.appendChild(header);
       const sensorsEl = document.createElement("div");
       sensorsEl.className = "sensors";

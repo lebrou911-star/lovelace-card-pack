@@ -44,7 +44,9 @@ for *Expander* or *Minimalistic Area*), or by editing YAML directly.
 
 ```yaml
 type: custom:minimalistic-area-card-plus
-title: Living Room
+title: Living Room         # plain text or a template, e.g. "Salon — {{ states('sensor.temp') }}°"
+title_size: 24             # px (or any CSS length); omit for the default
+title_color: white         # named colour, #hex, or a template
 area: living_room          # optional; auto-fills entities from the area
 image: /local/rooms/living_room.jpg   # or a full URL; omit to use the area picture
 darken_image: true
@@ -105,8 +107,8 @@ card-wide). All are in the visual editor too.
 | `badge_icon` | per entity | Optional `mdi:` icon shown in a small badge over the icon's top-right corner. |
 | `badge_color` | per entity | Badge colour. A value of `none` / `transparent` / empty **hides** the badge — pair with a template for conditional alerts (door open, low battery…). |
 
-**Templates** — `color`, `icon`, `name`, `badge_icon`, `badge_color`, `image`
-and `background_color` accept [Home Assistant Jinja templates](https://www.home-assistant.io/docs/configuration/templating/).
+**Templates** — `title`, `title_color`, `color`, `icon`, `name`, `badge_icon`,
+`badge_color`, `image` and `background_color` accept [Home Assistant Jinja templates](https://www.home-assistant.io/docs/configuration/templating/).
 They render live over the websocket and update the card whenever their result
 changes:
 

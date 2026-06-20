@@ -16,10 +16,12 @@ This project adheres to [Semantic Versioning](https://semver.org/).
     hide it.
   - **Icon size** (`icon_size`) — size as a percentage of the normal look
     (`100` = unchanged). Settable card-wide and overridable per entity.
-  - **Jinja templates** — `color`, `icon`, `name`, `badge_icon`, `badge_color`,
-    `image` and `background_color` now accept Home Assistant templates
-    (`{{ … }}` / `{% … %}`), rendered live over the websocket and re-rendered
-    when their result changes.
+  - **Jinja templates** — `title`, `color`, `icon`, `name`, `badge_icon`,
+    `badge_color`, `image` and `background_color` now accept Home Assistant
+    templates (`{{ … }}` / `{% … %}`), rendered live over the websocket and
+    re-rendered when their result changes.
+  - **Title styling** (`title_size`, `title_color`) — size (px or any CSS
+    length) and colour for the card title. `title_color` is template-aware too.
 
 ## [0.1.5] - 2024-06-19
 
