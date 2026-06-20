@@ -1,4 +1,4 @@
-/*! lovelace-card-pack v0.2.8 | https://github.com/lebrou911-star/lovelace-card-pack */
+/*! lovelace-card-pack v0.2.9 | https://github.com/lebrou911-star/lovelace-card-pack */
 (() => {
   var __defProp = Object.defineProperty;
   var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
@@ -1457,7 +1457,7 @@
   };
 
   // src/minimalistic-area-card-plus/minimalistic-area-card-plus.js
-  var VERSION2 = true ? "0.2.8" : "dev";
+  var VERSION2 = true ? "0.2.9" : "dev";
   var CARD_TYPE = "minimalistic-area-card-plus";
   var EDITOR_TYPE = "minimalistic-area-card-plus-editor";
   var UNAVAILABLE = "unavailable";
@@ -1757,7 +1757,7 @@
         huiImage.cameraImage = cfg.camera_image;
         huiImage.entity = cfg.camera_image;
         huiImage.cameraView = cfg.camera_view || "auto";
-        huiImage.width = "100%";
+        huiImage.fitMode = "cover";
         camera.appendChild(huiImage);
         this._card.appendChild(camera);
       }
@@ -1984,9 +1984,14 @@
         border-radius: var(--ha-card-border-radius, 12px);
       }
       div.camera hui-image {
-        position: relative;
-        top: 50%;
-        transform: translateY(-50%);
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      div.camera hui-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
       }
       .box {
         text-shadow: 1px 1px 2px black;
@@ -2130,7 +2135,7 @@
   );
 
   // src/index.js
-  var VERSION3 = true ? "0.2.8" : "dev";
+  var VERSION3 = true ? "0.2.9" : "dev";
   console.info(
     `%c LOVELACE-CARD-PACK %c v${VERSION3} `,
     "color: white; background: #6d28d9; font-weight: 700; border-radius: 3px 0 0 3px;",

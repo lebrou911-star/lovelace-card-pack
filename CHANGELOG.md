@@ -3,6 +3,14 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.2.9] - 2026-06-20
+
+### Fixed
+- `minimalistic-area-card-plus`: a `camera_image` now fills the whole card and
+  crops like a static image. It used to render at the camera's natural aspect
+  ratio (width 100%, height auto, vertically centred), leaving black bands. The
+  `hui-image` is now set to `fitMode: "cover"` and stretched to full height.
+
 ## [0.2.8] - 2026-06-20
 
 ### Fixed
@@ -168,6 +176,7 @@ one shot via HACS.
   - alignment controls for the bottom sensor row so text-valued states
     (e.g. `idle`) stay aligned with numeric ones.
 
+[0.2.9]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.2.9
 [0.2.8]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.2.8
 [0.2.7]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.2.7
 [0.2.6]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.2.6

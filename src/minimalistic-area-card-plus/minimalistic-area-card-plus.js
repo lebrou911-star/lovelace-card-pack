@@ -387,7 +387,8 @@ class MinimalisticAreaCardPlus extends HTMLElement {
       huiImage.cameraImage = cfg.camera_image;
       huiImage.entity = cfg.camera_image;
       huiImage.cameraView = cfg.camera_view || "auto";
-      huiImage.width = "100%";
+      // Fill and crop the tile like a static image does (object-fit: cover).
+      huiImage.fitMode = "cover";
       camera.appendChild(huiImage);
       this._card.appendChild(camera);
     }
@@ -656,9 +657,14 @@ class MinimalisticAreaCardPlus extends HTMLElement {
         border-radius: var(--ha-card-border-radius, 12px);
       }
       div.camera hui-image {
-        position: relative;
-        top: 50%;
-        transform: translateY(-50%);
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      div.camera hui-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
       }
       .box {
         text-shadow: 1px 1px 2px black;
