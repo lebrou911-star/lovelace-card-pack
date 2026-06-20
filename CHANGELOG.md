@@ -3,6 +3,15 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.4.1] - 2026-06-20
+
+### Fixed
+- `minimalistic-area-card-plus`: closing a more-info dialog opened from an icon
+  left the card content/image slightly shifted. Focus returned to the icon
+  button and the browser scrolled it into view inside the `overflow: hidden`
+  card (which blocks visible but not programmatic scrolling). The card now uses
+  `overflow: clip` (plus a scroll-reset fallback) so the content can't be nudged.
+
 ## [0.4.0] - 2026-06-20
 
 ### Added
@@ -212,6 +221,7 @@ one shot via HACS.
   - alignment controls for the bottom sensor row so text-valued states
     (e.g. `idle`) stay aligned with numeric ones.
 
+[0.4.1]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.4.1
 [0.4.0]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.4.0
 [0.3.2]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.3.2
 [0.3.1]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.3.1

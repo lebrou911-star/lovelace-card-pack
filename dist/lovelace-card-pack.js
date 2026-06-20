@@ -1,4 +1,4 @@
-/*! lovelace-card-pack v0.4.0 | https://github.com/lebrou911-star/lovelace-card-pack */
+/*! lovelace-card-pack v0.4.1 | https://github.com/lebrou911-star/lovelace-card-pack */
 (() => {
   var __defProp = Object.defineProperty;
   var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
@@ -1526,7 +1526,7 @@
   };
 
   // src/minimalistic-area-card-plus/minimalistic-area-card-plus.js
-  var VERSION2 = true ? "0.4.0" : "dev";
+  var VERSION2 = true ? "0.4.1" : "dev";
   var CARD_TYPE = "minimalistic-area-card-plus";
   var EDITOR_TYPE = "minimalistic-area-card-plus-editor";
   var UNAVAILABLE = "unavailable";
@@ -1802,6 +1802,12 @@
           { hasHold: hasAction(this._config.hold_action), hasDoubleClick: hasAction(this._config.double_tap_action) },
           (actionName) => this._handleThisAction(actionName)
         );
+        this._card.addEventListener("scroll", () => {
+          if (this._card.scrollTop || this._card.scrollLeft) {
+            this._card.scrollTop = 0;
+            this._card.scrollLeft = 0;
+          }
+        });
         this.shadowRoot.appendChild(this._card);
         this._built = true;
       }
@@ -2079,6 +2085,9 @@
         height: 100%;
         z-index: 0;
         overflow: hidden;
+        /* clip also blocks programmatic scrolling, so focusing an icon when a
+           more-info dialog closes cannot nudge the card content out of place. */
+        overflow: clip;
       }
       img {
         display: block;
@@ -2255,7 +2264,7 @@
   );
 
   // src/index.js
-  var VERSION3 = true ? "0.4.0" : "dev";
+  var VERSION3 = true ? "0.4.1" : "dev";
   console.info(
     `%c LOVELACE-CARD-PACK %c v${VERSION3} `,
     "color: white; background: #6d28d9; font-weight: 700; border-radius: 3px 0 0 3px;",

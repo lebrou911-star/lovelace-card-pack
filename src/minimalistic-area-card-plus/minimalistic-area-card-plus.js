@@ -361,6 +361,14 @@ class MinimalisticAreaCardPlus extends HTMLElement {
         { hasHold: hasAction(this._config.hold_action), hasDoubleClick: hasAction(this._config.double_tap_action) },
         (actionName) => this._handleThisAction(actionName)
       );
+      // Fallback for browsers without `overflow: clip`: if focusing an icon
+      // (e.g. when a more-info dialog closes) scrolls the card, snap it back.
+      this._card.addEventListener("scroll", () => {
+        if (this._card.scrollTop || this._card.scrollLeft) {
+          this._card.scrollTop = 0;
+          this._card.scrollLeft = 0;
+        }
+      });
       this.shadowRoot.appendChild(this._card);
       this._built = true;
     }
@@ -701,6 +709,9 @@ class MinimalisticAreaCardPlus extends HTMLElement {
         height: 100%;
         z-index: 0;
         overflow: hidden;
+        /* clip also blocks programmatic scrolling, so focusing an icon when a
+           more-info dialog closes cannot nudge the card content out of place. */
+        overflow: clip;
       }
       img {
         display: block;
