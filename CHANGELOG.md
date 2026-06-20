@@ -3,6 +3,17 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.2.7] - 2026-06-20
+
+### Changed
+- `minimalistic-area-card-plus`: the bottom control-icon row is now flush in the
+  bottom-right corner and bottom-aligned. It was `display:block` +
+  `text-align:right` with 10px bottom padding, so icons of different sizes
+  (e.g. an entity with `icon_size: 120`) didn't line up and the row floated a
+  little above the corner. It is now a flex row (`justify-content:flex-end`,
+  `align-items:flex-end`) with minimal padding, so the icons sit together in the
+  corner on every card.
+
 ## [0.2.6] - 2026-06-20
 
 ### Changed
@@ -149,6 +160,7 @@ one shot via HACS.
   - alignment controls for the bottom sensor row so text-valued states
     (e.g. `idle`) stay aligned with numeric ones.
 
+[0.2.7]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.2.7
 [0.2.6]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.2.6
 [0.2.5]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.2.5
 [0.2.4]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.2.4

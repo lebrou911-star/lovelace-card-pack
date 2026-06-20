@@ -693,11 +693,12 @@ class MinimalisticAreaCardPlus extends HTMLElement {
         align-items: center;
       }
       .box .buttons {
-        display: block;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        align-items: flex-end;
         background-color: transparent;
-        text-align: right;
-        padding-top: 10px;
-        padding-bottom: 10px;
+        padding: 6px 4px 3px 0;
         min-height: 10px;
         width: 100%;
         margin-top: auto;
