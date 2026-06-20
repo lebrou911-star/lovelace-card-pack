@@ -1,4 +1,4 @@
-/*! lovelace-card-pack v0.2.7 | https://github.com/lebrou911-star/lovelace-card-pack */
+/*! lovelace-card-pack v0.2.8 | https://github.com/lebrou911-star/lovelace-card-pack */
 (() => {
   var __defProp = Object.defineProperty;
   var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
@@ -1457,7 +1457,7 @@
   };
 
   // src/minimalistic-area-card-plus/minimalistic-area-card-plus.js
-  var VERSION2 = true ? "0.2.7" : "dev";
+  var VERSION2 = true ? "0.2.8" : "dev";
   var CARD_TYPE = "minimalistic-area-card-plus";
   var EDITOR_TYPE = "minimalistic-area-card-plus-editor";
   var UNAVAILABLE = "unavailable";
@@ -2092,7 +2092,9 @@
       .box .sensors .state {
         display: inline-flex;
         align-items: center;
-        margin-left: -9px;
+        /* Small gap from the icon. Was -9px, which glued the value to wide
+           glyphs (e.g. mdi:pump); -6px keeps a minimum space for every icon. */
+        margin-left: -6px;
       }
       .box .sensors .state.nowrap {
         white-space: nowrap;
@@ -2128,7 +2130,7 @@
   );
 
   // src/index.js
-  var VERSION3 = true ? "0.2.7" : "dev";
+  var VERSION3 = true ? "0.2.8" : "dev";
   console.info(
     `%c LOVELACE-CARD-PACK %c v${VERSION3} `,
     "color: white; background: #6d28d9; font-weight: 700; border-radius: 3px 0 0 3px;",

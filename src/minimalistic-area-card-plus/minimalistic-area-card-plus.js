@@ -764,7 +764,9 @@ class MinimalisticAreaCardPlus extends HTMLElement {
       .box .sensors .state {
         display: inline-flex;
         align-items: center;
-        margin-left: -9px;
+        /* Small gap from the icon. Was -9px, which glued the value to wide
+           glyphs (e.g. mdi:pump); -6px keeps a minimum space for every icon. */
+        margin-left: -6px;
       }
       .box .sensors .state.nowrap {
         white-space: nowrap;

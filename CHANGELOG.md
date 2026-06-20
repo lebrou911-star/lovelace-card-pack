@@ -3,6 +3,14 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.2.8] - 2026-06-20
+
+### Fixed
+- `minimalistic-area-card-plus`: a sensor value could be glued to its icon when
+  the icon glyph is wide (e.g. `mdi:pump`), while narrow glyphs kept a small
+  gap. The fixed `-9px` pull on the value didn't allow for glyph width;
+  loosened to `-6px` so every value keeps a small space from its icon.
+
 ## [0.2.7] - 2026-06-20
 
 ### Changed
@@ -160,6 +168,7 @@ one shot via HACS.
   - alignment controls for the bottom sensor row so text-valued states
     (e.g. `idle`) stay aligned with numeric ones.
 
+[0.2.8]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.2.8
 [0.2.7]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.2.7
 [0.2.6]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.2.6
 [0.2.5]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.2.5
