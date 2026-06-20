@@ -222,7 +222,7 @@ class MinimalisticAreaCardPlusEditor extends HTMLElement {
       this.shadowRoot.innerHTML = `
         <style>
           .editor { display: flex; flex-direction: column; gap: 16px; }
-          .section-title { font-weight: 600; margin: 4px 0 -4px; }
+          .section-title { font-weight: 600; margin: 8px 0 4px; }
           .entities { display: flex; flex-direction: column; gap: 12px; }
           .entity-row {
             display: grid;
@@ -248,7 +248,7 @@ class MinimalisticAreaCardPlusEditor extends HTMLElement {
           .add-row { display: flex; align-items: center; gap: 8px; }
           .add-row ha-entity-picker { flex: 1; }
           ha-textfield { width: 100%; }
-          .hint { color: var(--secondary-text-color); font-size: 0.85em; margin-top: -8px; }
+          .hint { color: var(--secondary-text-color); font-size: 0.85em; margin: 0 0 4px; line-height: 1.3; }
         </style>
         <div class="editor">
           <div id="main"></div>

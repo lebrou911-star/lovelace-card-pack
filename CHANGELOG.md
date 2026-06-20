@@ -3,6 +3,15 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.2.2] - 2026-06-20
+
+### Fixed
+- `minimalistic-area-card-plus` editor: section titles ("Entities", "Sensor row
+  alignment") and their hint text overlapped, and the per-entity "Colour, size &
+  badge" hint rode up over the icon field. Caused by negative CSS margins
+  (`section-title` margin-bottom and `hint` margin-top); replaced with normal
+  spacing so the labels no longer collide.
+
 ## [0.2.1] - 2026-06-20
 
 ### Fixed
@@ -101,6 +110,7 @@ one shot via HACS.
   - alignment controls for the bottom sensor row so text-valued states
     (e.g. `idle`) stay aligned with numeric ones.
 
+[0.2.2]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.2.2
 [0.2.1]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.2.1
 [0.2.0]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.2.0
 [0.1.5]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.1.5

@@ -1,6 +1,6 @@
 {
   "name": "lovelace-card-pack",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "A pack of custom Lovelace cards for Home Assistant, bundled into a single JS file and installable in one shot via HACS.",
   "type": "module",
   "private": true,

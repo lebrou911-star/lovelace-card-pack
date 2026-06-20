@@ -1,4 +1,4 @@
-/*! lovelace-card-pack v0.2.1 | https://github.com/lebrou911-star/lovelace-card-pack */
+/*! lovelace-card-pack v0.2.2 | https://github.com/lebrou911-star/lovelace-card-pack */
 (() => {
   var __defProp = Object.defineProperty;
   var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
@@ -1032,7 +1032,7 @@
         this.shadowRoot.innerHTML = `
         <style>
           .editor { display: flex; flex-direction: column; gap: 16px; }
-          .section-title { font-weight: 600; margin: 4px 0 -4px; }
+          .section-title { font-weight: 600; margin: 8px 0 4px; }
           .entities { display: flex; flex-direction: column; gap: 12px; }
           .entity-row {
             display: grid;
@@ -1058,7 +1058,7 @@
           .add-row { display: flex; align-items: center; gap: 8px; }
           .add-row ha-entity-picker { flex: 1; }
           ha-textfield { width: 100%; }
-          .hint { color: var(--secondary-text-color); font-size: 0.85em; margin-top: -8px; }
+          .hint { color: var(--secondary-text-color); font-size: 0.85em; margin: 0 0 4px; line-height: 1.3; }
         </style>
         <div class="editor">
           <div id="main"></div>
@@ -1375,7 +1375,7 @@
   };
 
   // src/minimalistic-area-card-plus/minimalistic-area-card-plus.js
-  var VERSION2 = true ? "0.2.1" : "dev";
+  var VERSION2 = true ? "0.2.2" : "dev";
   var CARD_TYPE = "minimalistic-area-card-plus";
   var EDITOR_TYPE = "minimalistic-area-card-plus-editor";
   var UNAVAILABLE = "unavailable";
@@ -2045,7 +2045,7 @@
   );
 
   // src/index.js
-  var VERSION3 = true ? "0.2.1" : "dev";
+  var VERSION3 = true ? "0.2.2" : "dev";
   console.info(
     `%c LOVELACE-CARD-PACK %c v${VERSION3} `,
     "color: white; background: #6d28d9; font-weight: 700; border-radius: 3px 0 0 3px;",
