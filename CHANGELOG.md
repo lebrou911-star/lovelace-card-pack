@@ -3,7 +3,14 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
-## [0.2.0] - 2026-06-20
+## [0.2.1] - 2026-06-20
+
+### Fixed
+- Release pipeline: the `release.yml` workflow now pins the tag to the pushed
+  commit (`target_commitish`) and marks it `make_latest`. The repository's
+  default branch is not `main`, so the Releases API had tagged the previous
+  (old) commit — `v0.2.0` shipped the pre-0.2 bundle. `v0.2.1` carries the
+  features below with the correct bundle and supersedes `v0.2.0`.
 
 ### Added
 - `minimalistic-area-card-plus`: four new per-entity / card options, all exposed
@@ -94,6 +101,7 @@ one shot via HACS.
   - alignment controls for the bottom sensor row so text-valued states
     (e.g. `idle`) stay aligned with numeric ones.
 
+[0.2.1]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.2.1
 [0.2.0]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.2.0
 [0.1.5]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.1.5
 [0.1.4]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.1.4

@@ -59,6 +59,11 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: "v${{ steps.pkg.outputs.version }}"
+          # Pin the tag to the pushed commit. Without this the Releases API
+          # defaults target_commitish to the repo's default branch, which here
+          # is not `main` — that tagged old code as a new release.
+          target_commitish: ${{ github.sha }}
           name: "v${{ steps.pkg.outputs.version }}"
           body_path: ${{ steps.notes.outputs.path }}
+          make_latest: "true"
           files: dist/lovelace-card-pack.js
