@@ -47,7 +47,71 @@ function hasAction(config) {
 }
 
 // Perform a Lovelace action (tap/hold/double-tap) without custom-card-helpers.
-function handleAction(node, hass, actionConfig, fallbackEntityId) {
+// Themed confirmation modal — a clean, HA-themed replacement for window.confirm.
+// Returns a Promise that resolves true (confirm) or false (cancel/dismiss).
+function showConfirm(opts = {}) {
+  return new Promise((resolve) => {
+    const overlay = document.createElement("div");
+    overlay.style.cssText =
+      "position:fixed;inset:0;z-index:1000000;display:flex;align-items:center;justify-content:center;" +
+      "background:rgba(0,0,0,0.46);";
+    const box = document.createElement("div");
+    box.style.cssText =
+      "box-sizing:border-box;min-width:280px;max-width:min(92vw,380px);" +
+      "background:var(--ha-card-background,var(--card-background-color,#1c1c1c));" +
+      "color:var(--primary-text-color,#e1e1e1);border-radius:var(--ha-card-border-radius,16px);" +
+      "box-shadow:0 12px 40px rgba(0,0,0,0.5);padding:22px 24px 14px;" +
+      "font-family:var(--paper-font-body1_-_font-family,Roboto,system-ui,sans-serif);";
+    const title = document.createElement("div");
+    title.textContent = opts.title || "Confirmation";
+    title.style.cssText = "font-size:1.2rem;font-weight:500;margin-bottom:10px;";
+    const msg = document.createElement("div");
+    msg.textContent = opts.text || "Are you sure you want to perform this action?";
+    msg.style.cssText =
+      "font-size:1rem;line-height:1.45;color:var(--secondary-text-color,#9b9b9b);margin-bottom:22px;";
+    const row = document.createElement("div");
+    row.style.cssText = "display:flex;justify-content:flex-end;gap:4px;";
+    const mkBtn = (label, accent) => {
+      const b = document.createElement("button");
+      b.textContent = label;
+      b.style.cssText =
+        "border:none;background:none;cursor:pointer;font:inherit;font-size:0.95rem;font-weight:500;" +
+        "padding:9px 14px;border-radius:10px;" +
+        (accent ? "color:var(--primary-color,#03a9f4);" : "color:var(--secondary-text-color,#9b9b9b);");
+      b.addEventListener("pointerenter", () => (b.style.background = "rgba(127,127,127,0.14)"));
+      b.addEventListener("pointerleave", () => (b.style.background = "none"));
+      return b;
+    };
+    const cancelBtn = mkBtn(opts.dismissText || "Annuler", false);
+    const okBtn = mkBtn(opts.confirmText || "Confirmer", true);
+    let done = false;
+    const close = (val) => {
+      if (done) return;
+      done = true;
+      document.removeEventListener("keydown", onKey, true);
+      overlay.remove();
+      resolve(val);
+    };
+    const onKey = (ev) => {
+      if (ev.key === "Escape") { ev.stopPropagation(); close(false); }
+      else if (ev.key === "Enter") { ev.stopPropagation(); close(true); }
+    };
+    cancelBtn.addEventListener("click", () => close(false));
+    okBtn.addEventListener("click", () => close(true));
+    overlay.addEventListener("click", (ev) => { if (ev.target === overlay) close(false); });
+    document.addEventListener("keydown", onKey, true);
+    row.appendChild(cancelBtn);
+    row.appendChild(okBtn);
+    box.appendChild(title);
+    box.appendChild(msg);
+    box.appendChild(row);
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => okBtn.focus());
+  });
+}
+
+async function handleAction(node, hass, actionConfig, fallbackEntityId) {
   if (!actionConfig) return;
   const action = actionConfig.action || "more-info";
   if (action === "none") return;
@@ -60,12 +124,14 @@ function handleAction(node, hass, actionConfig, fallbackEntityId) {
       hass &&
       hass.user &&
       c.exemptions.some((e) => e && e.user === hass.user.id);
-    if (!exempt && !window.confirm(c.text || "Are you sure you want to perform this action?")) {
-      return;
+    if (!exempt) {
+      const confirmed = await showConfirm({ text: c.text, title: c.title });
+      if (!confirmed) return;
     }
   }
 
   switch (action) {
+
     case "none":
       break;
     case "more-info": {

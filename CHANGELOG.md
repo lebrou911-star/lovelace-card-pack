@@ -3,6 +3,15 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.4.2] - 2026-06-20
+
+### Changed
+- `minimalistic-area-card-plus`: tap/hold action **confirmations** now use a
+  themed in-card modal instead of the browser's native `window.confirm`. It
+  follows the HA theme (card background, accent button), shows the
+  `confirmation.text`, and supports Esc = cancel, Enter = confirm, click-outside
+  = cancel. Button labels default to "Annuler" / "Confirmer".
+
 ## [0.4.1] - 2026-06-20
 
 ### Fixed
@@ -221,6 +230,7 @@ one shot via HACS.
   - alignment controls for the bottom sensor row so text-valued states
     (e.g. `idle`) stay aligned with numeric ones.
 
+[0.4.2]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.4.2
 [0.4.1]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.4.1
 [0.4.0]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.4.0
 [0.3.2]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.3.2
