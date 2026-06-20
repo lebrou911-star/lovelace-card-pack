@@ -21,6 +21,12 @@ function fireEvent(node, type, detail) {
   return event;
 }
 
+// True if a value looks like a Home Assistant Jinja template. Used to decide
+// whether an icon belongs in the icon picker (static) or the template field.
+function isTemplate(v) {
+  return typeof v === "string" && /\{\{|\{%|\{#/.test(v);
+}
+
 // Top section: look & behaviour. Action fields use the native ui_action selector.
 const MAIN_SCHEMA = [
   {
@@ -331,13 +337,18 @@ class MinimalisticAreaCardPlusEditor extends HTMLElement {
     });
     row.appendChild(entityPicker);
 
+    const iconIsTpl = isTemplate(conf.icon);
     const iconPicker = document.createElement("ha-icon-picker");
     iconPicker.hass = this._hass;
-    iconPicker.value = conf.icon || "";
+    iconPicker.value = iconIsTpl ? "" : conf.icon || "";
     iconPicker.label = "Icon (optional)";
     iconPicker.addEventListener("value-changed", (ev) => {
       ev.stopPropagation();
-      this._updateEntity(index, "icon", ev.detail.value);
+      const v = ev.detail.value;
+      // Don't let a spurious empty pick wipe a template typed in the field below.
+      const current = this._normalizeEntity(this._entities[index] || {}).icon;
+      if (!v && isTemplate(current)) return;
+      this._updateEntity(index, "icon", v);
     });
     row.appendChild(iconPicker);
 
@@ -352,9 +363,21 @@ class MinimalisticAreaCardPlusEditor extends HTMLElement {
     });
     row.appendChild(nameField);
 
+    // Template alternative to the icon picker. Whichever is filled wins; a
+    // template ({{ … }}) lives here, a static mdi icon lives in the picker.
+    const iconTpl = document.createElement("ha-textfield");
+    iconTpl.label = "Icon (template {{ }})";
+    iconTpl.classList.add("full");
+    iconTpl.value = iconIsTpl ? conf.icon : "";
+    const setIconTpl = (ev) => this._updateEntity(index, "icon", ev.target.value, /* silent */ true);
+    iconTpl.addEventListener("input", setIconTpl);
+    iconTpl.addEventListener("change", setIconTpl);
+    row.appendChild(iconTpl);
+
     const advancedHint = document.createElement("div");
     advancedHint.className = "full hint";
-    advancedHint.textContent = "Colour, size & badge — Jinja templates ({{ … }}) allowed for colour, icon & badge.";
+    advancedHint.textContent =
+      "Pick a static icon above, or type a Jinja template ({{ … }}) in the “template” field. Colour & badge colour also accept templates.";
     row.appendChild(advancedHint);
 
     const colorField = document.createElement("ha-textfield");
@@ -381,16 +404,29 @@ class MinimalisticAreaCardPlusEditor extends HTMLElement {
     });
     row.appendChild(sizeField);
 
+    const badgeIsTpl = isTemplate(conf.badge_icon);
     const badgeIconPicker = document.createElement("ha-icon-picker");
     badgeIconPicker.hass = this._hass;
-    badgeIconPicker.value = conf.badge_icon || "";
+    badgeIconPicker.value = badgeIsTpl ? "" : conf.badge_icon || "";
     badgeIconPicker.label = "Badge icon (optional)";
     badgeIconPicker.classList.add("full");
     badgeIconPicker.addEventListener("value-changed", (ev) => {
       ev.stopPropagation();
-      this._updateEntity(index, "badge_icon", ev.detail.value);
+      const v = ev.detail.value;
+      const current = this._normalizeEntity(this._entities[index] || {}).badge_icon;
+      if (!v && isTemplate(current)) return;
+      this._updateEntity(index, "badge_icon", v);
     });
     row.appendChild(badgeIconPicker);
+
+    const badgeIconTpl = document.createElement("ha-textfield");
+    badgeIconTpl.label = "Badge icon (template {{ }})";
+    badgeIconTpl.classList.add("full");
+    badgeIconTpl.value = badgeIsTpl ? conf.badge_icon : "";
+    const setBadgeTpl = (ev) => this._updateEntity(index, "badge_icon", ev.target.value, /* silent */ true);
+    badgeIconTpl.addEventListener("input", setBadgeTpl);
+    badgeIconTpl.addEventListener("change", setBadgeTpl);
+    row.appendChild(badgeIconTpl);
 
     const badgeColorField = document.createElement("ha-textfield");
     badgeColorField.label = "Badge colour / condition (optional)";

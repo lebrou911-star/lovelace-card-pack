@@ -3,6 +3,16 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.2.3] - 2026-06-20
+
+### Added
+- `minimalistic-area-card-plus` editor: each entity now has an "Icon (template)"
+  and "Badge icon (template)" text field beside the icon pickers, so a Jinja
+  template for the icon can be entered straight from the visual editor (the
+  picker stays for static icons). Both widgets share the same `icon` /
+  `badge_icon` key — whichever is filled wins, and the editor routes a template
+  value to the template field and a static `mdi:` value to the picker.
+
 ## [0.2.2] - 2026-06-20
 
 ### Fixed
@@ -110,6 +120,7 @@ one shot via HACS.
   - alignment controls for the bottom sensor row so text-valued states
     (e.g. `idle`) stay aligned with numeric ones.
 
+[0.2.3]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.2.3
 [0.2.2]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.2.2
 [0.2.1]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.2.1
 [0.2.0]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.2.0
