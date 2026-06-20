@@ -260,7 +260,13 @@ class MinimalisticAreaCardPlus extends HTMLElement {
     const entities = (this._config && this._config.entities) || this._areaEntities || [];
     for (const item of entities) {
       const entity = this._parseEntity(item);
-      if (!entity || !entity.entity) continue;
+      if (!entity) continue;
+      if (!entity.entity) {
+        // Entity-less shortcut button: a plain icon + action (e.g. a
+        // navigation link to Config / Logs / HACS). Rendered in the action row.
+        if (entity.icon || entity.tap_action) buttons.push({ conf: entity, dialog: false, button: true });
+        continue;
+      }
       const domain = entity.entity.split(".")[0];
       if (SENSORS.indexOf(domain) !== -1 || entity.attribute) {
         sensor.push(entity);
@@ -450,6 +456,8 @@ class MinimalisticAreaCardPlus extends HTMLElement {
   _renderEntity(entityConf, dialog, isSensor, align) {
     const hass = this._hass;
     const cfg = this._config;
+    // Entity-less shortcut button (navigation / action only): no state-badge.
+    if (!entityConf.entity) return this._renderButtonIcon(entityConf);
     const stateObj = hass.states[entityConf.entity];
     const entityReg = hass.entities ? hass.entities[entityConf.entity] : undefined;
 
@@ -559,6 +567,50 @@ class MinimalisticAreaCardPlus extends HTMLElement {
       wrapper.appendChild(state);
     }
 
+    return wrapper;
+  }
+
+  // Render an entity-less shortcut button: a plain icon (ha-icon) with an
+  // action, optional colour/size/badge — used for navigation links etc.
+  _renderButtonIcon(entityConf) {
+    const cfg = this._config;
+    const resolvedIcon = this._resolve(entityConf.icon) || "mdi:gesture-tap-button";
+    const resolvedName = this._resolve(entityConf.name);
+    const resolvedColor = this._resolve(entityConf.color);
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "wrapper";
+
+    const iconWrap = document.createElement("div");
+    iconWrap.className = "icon-wrap";
+
+    const iconButton = document.createElement("ha-icon-button");
+    iconButton.className = "state-on";
+    if (resolvedName) iconButton.title = resolvedName;
+
+    const sizePct = Number(entityConf.icon_size != null ? entityConf.icon_size : cfg.icon_size);
+    const factor = isFinite(sizePct) && sizePct > 0 ? sizePct / 100 : 1;
+    if (factor !== 1) {
+      iconButton.style.zoom = String(factor);
+      iconButton.style.MozTransform = `scale(${factor})`;
+    }
+
+    const haIcon = document.createElement("ha-icon");
+    haIcon.icon = resolvedIcon;
+    if (cfg.shadow) haIcon.className = "shadow";
+    if (resolvedColor) haIcon.style.color = resolvedColor;
+    iconButton.appendChild(haIcon);
+    iconWrap.appendChild(iconButton);
+
+    const badgeEl = this._buildBadge(entityConf);
+    if (badgeEl) iconWrap.appendChild(badgeEl);
+
+    attachAction(
+      iconButton,
+      { hasHold: hasAction(entityConf.hold_action), hasDoubleClick: hasAction(entityConf.double_tap_action) },
+      (actionName) => handleAction(this, this._hass, entityConf[`${actionName}_action`], undefined)
+    );
+    wrapper.appendChild(iconWrap);
     return wrapper;
   }
 
@@ -782,6 +834,8 @@ class MinimalisticAreaCardPlus extends HTMLElement {
       }
       .box ha-icon-button state-badge.shadow { filter: drop-shadow(2px 2px 2px gray); }
       .box ha-icon-button.state-on state-badge { color: var(--ha-picture-icon-button-on-color, white); }
+      .box .buttons ha-icon-button ha-icon { color: var(--ha-picture-icon-button-on-color, white); }
+      .box .buttons ha-icon-button ha-icon.shadow { filter: drop-shadow(2px 2px 2px gray); }
       .box .sensors .state {
         display: inline-flex;
         align-items: center;
