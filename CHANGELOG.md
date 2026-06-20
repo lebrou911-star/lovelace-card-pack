@@ -3,6 +3,16 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.2.4] - 2026-06-20
+
+### Fixed
+- `minimalistic-area-card-plus` editor: the per-entity text fields (Name, Icon
+  template, Icon colour, Icon size, Badge icon template, Badge colour) were
+  effectively invisible when empty — a filled `ha-textfield` has no visible
+  outline on a dark theme, so the new "Icon (template)" field could not be
+  found. They are now `outlined`, showing a clear border (and label) even when
+  empty.
+
 ## [0.2.3] - 2026-06-20
 
 ### Added
@@ -120,6 +130,7 @@ one shot via HACS.
   - alignment controls for the bottom sensor row so text-valued states
     (e.g. `idle`) stay aligned with numeric ones.
 
+[0.2.4]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.2.4
 [0.2.3]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.2.3
 [0.2.2]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.2.2
 [0.2.1]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.2.1

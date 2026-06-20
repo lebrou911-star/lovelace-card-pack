@@ -354,6 +354,7 @@ class MinimalisticAreaCardPlusEditor extends HTMLElement {
 
     const nameField = document.createElement("ha-textfield");
     nameField.label = "Name (optional)";
+    nameField.outlined = true;
     nameField.value = conf.name || "";
     nameField.addEventListener("input", (ev) => {
       this._updateEntity(index, "name", ev.target.value, /* silent */ true);
@@ -367,6 +368,7 @@ class MinimalisticAreaCardPlusEditor extends HTMLElement {
     // template ({{ … }}) lives here, a static mdi icon lives in the picker.
     const iconTpl = document.createElement("ha-textfield");
     iconTpl.label = "Icon (template {{ }})";
+    iconTpl.outlined = true;
     iconTpl.classList.add("full");
     iconTpl.value = iconIsTpl ? conf.icon : "";
     const setIconTpl = (ev) => this._updateEntity(index, "icon", ev.target.value, /* silent */ true);
@@ -382,6 +384,7 @@ class MinimalisticAreaCardPlusEditor extends HTMLElement {
 
     const colorField = document.createElement("ha-textfield");
     colorField.label = "Icon colour (optional)";
+    colorField.outlined = true;
     colorField.value = conf.color || "";
     colorField.addEventListener("input", (ev) => {
       this._updateEntity(index, "color", ev.target.value, /* silent */ true);
@@ -393,6 +396,7 @@ class MinimalisticAreaCardPlusEditor extends HTMLElement {
 
     const sizeField = document.createElement("ha-textfield");
     sizeField.label = "Icon size %";
+    sizeField.outlined = true;
     sizeField.type = "number";
     sizeField.value = conf.icon_size != null ? conf.icon_size : "";
     const sizeVal = (raw) => (raw === "" || raw == null ? "" : Number(raw));
@@ -421,6 +425,7 @@ class MinimalisticAreaCardPlusEditor extends HTMLElement {
 
     const badgeIconTpl = document.createElement("ha-textfield");
     badgeIconTpl.label = "Badge icon (template {{ }})";
+    badgeIconTpl.outlined = true;
     badgeIconTpl.classList.add("full");
     badgeIconTpl.value = badgeIsTpl ? conf.badge_icon : "";
     const setBadgeTpl = (ev) => this._updateEntity(index, "badge_icon", ev.target.value, /* silent */ true);
@@ -430,6 +435,7 @@ class MinimalisticAreaCardPlusEditor extends HTMLElement {
 
     const badgeColorField = document.createElement("ha-textfield");
     badgeColorField.label = "Badge colour / condition (optional)";
+    badgeColorField.outlined = true;
     badgeColorField.classList.add("full");
     badgeColorField.value = conf.badge_color || "";
     badgeColorField.addEventListener("input", (ev) => {

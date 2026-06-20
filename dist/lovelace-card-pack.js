@@ -1,4 +1,4 @@
-/*! lovelace-card-pack v0.2.3 | https://github.com/lebrou911-star/lovelace-card-pack */
+/*! lovelace-card-pack v0.2.4 | https://github.com/lebrou911-star/lovelace-card-pack */
 (() => {
   var __defProp = Object.defineProperty;
   var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
@@ -1145,6 +1145,7 @@
       row.appendChild(iconPicker);
       const nameField = document.createElement("ha-textfield");
       nameField.label = "Name (optional)";
+      nameField.outlined = true;
       nameField.value = conf.name || "";
       nameField.addEventListener("input", (ev) => {
         this._updateEntity(
@@ -1161,6 +1162,7 @@
       row.appendChild(nameField);
       const iconTpl = document.createElement("ha-textfield");
       iconTpl.label = "Icon (template {{ }})";
+      iconTpl.outlined = true;
       iconTpl.classList.add("full");
       iconTpl.value = iconIsTpl ? conf.icon : "";
       const setIconTpl = (ev) => this._updateEntity(
@@ -1179,6 +1181,7 @@
       row.appendChild(advancedHint);
       const colorField = document.createElement("ha-textfield");
       colorField.label = "Icon colour (optional)";
+      colorField.outlined = true;
       colorField.value = conf.color || "";
       colorField.addEventListener("input", (ev) => {
         this._updateEntity(
@@ -1195,6 +1198,7 @@
       row.appendChild(colorField);
       const sizeField = document.createElement("ha-textfield");
       sizeField.label = "Icon size %";
+      sizeField.outlined = true;
       sizeField.type = "number";
       sizeField.value = conf.icon_size != null ? conf.icon_size : "";
       const sizeVal = (raw) => raw === "" || raw == null ? "" : Number(raw);
@@ -1227,6 +1231,7 @@
       row.appendChild(badgeIconPicker);
       const badgeIconTpl = document.createElement("ha-textfield");
       badgeIconTpl.label = "Badge icon (template {{ }})";
+      badgeIconTpl.outlined = true;
       badgeIconTpl.classList.add("full");
       badgeIconTpl.value = badgeIsTpl ? conf.badge_icon : "";
       const setBadgeTpl = (ev) => this._updateEntity(
@@ -1241,6 +1246,7 @@
       row.appendChild(badgeIconTpl);
       const badgeColorField = document.createElement("ha-textfield");
       badgeColorField.label = "Badge colour / condition (optional)";
+      badgeColorField.outlined = true;
       badgeColorField.classList.add("full");
       badgeColorField.value = conf.badge_color || "";
       badgeColorField.addEventListener("input", (ev) => {
@@ -1414,7 +1420,7 @@
   };
 
   // src/minimalistic-area-card-plus/minimalistic-area-card-plus.js
-  var VERSION2 = true ? "0.2.3" : "dev";
+  var VERSION2 = true ? "0.2.4" : "dev";
   var CARD_TYPE = "minimalistic-area-card-plus";
   var EDITOR_TYPE = "minimalistic-area-card-plus-editor";
   var UNAVAILABLE = "unavailable";
@@ -2084,7 +2090,7 @@
   );
 
   // src/index.js
-  var VERSION3 = true ? "0.2.3" : "dev";
+  var VERSION3 = true ? "0.2.4" : "dev";
   console.info(
     `%c LOVELACE-CARD-PACK %c v${VERSION3} `,
     "color: white; background: #6d28d9; font-weight: 700; border-radius: 3px 0 0 3px;",
