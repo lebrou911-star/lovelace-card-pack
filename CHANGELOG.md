@@ -22,6 +22,8 @@ This project adheres to [Semantic Versioning](https://semver.org/).
     re-rendered when their result changes.
   - **Title styling** (`title_size`, `title_color`) — size (px or any CSS
     length) and colour for the card title. `title_color` is template-aware too.
+  - **Drag-and-drop reordering** in the editor — drag the ⠿ handle on an entity
+    row to reorder; the up/down arrows remain as a fallback.
 
 ## [0.1.5] - 2024-06-19
 

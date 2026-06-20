@@ -995,7 +995,8 @@
   var mdiPath = {
     up: "M7.41,15.41L12,10.83L16.59,15.41L18,14L12,8L6,14L7.41,15.41Z",
     down: "M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z",
-    remove: "M19,13H5V11H19V13Z"
+    remove: "M19,13H5V11H19V13Z",
+    drag: "M7,19V17H9V19H7M11,19V17H13V19H11M15,19V17H17V19H15M7,15V13H9V15H7M11,15V13H13V15H11M15,15V13H17V15H15M7,11V9H9V11H7M11,11V9H13V11H11M15,11V9H17V11H15M7,7V5H9V7H7M11,7V5H13V7H11M15,7V5H17V7H15Z"
   };
   var MinimalisticAreaCardPlusEditor = class extends HTMLElement {
     constructor() {
@@ -1050,6 +1051,10 @@
             gap: 2px;
             margin-top: -4px;
           }
+          .entity-row .drag-handle { cursor: grab; margin-right: auto; }
+          .entity-row.dragging { opacity: 0.5; }
+          .entity-row.drop-before { box-shadow: 0 -3px 0 0 var(--primary-color, #03a9f4); }
+          .entity-row.drop-after { box-shadow: 0 3px 0 0 var(--primary-color, #03a9f4); }
           .add-row { display: flex; align-items: center; gap: 8px; }
           .add-row ha-entity-picker { flex: 1; }
           ha-textfield { width: 100%; }
@@ -1059,7 +1064,7 @@
           <div id="main"></div>
           <div>
             <div class="section-title">Entities</div>
-            <div class="hint">Drag-free reorder with the arrows; per-entity icon, name and tap action.</div>
+            <div class="hint">Reorder by dragging the ⠿ handle (or the arrows); per-entity icon, name, colour, size, badge and tap action.</div>
             <div class="entities" id="entities"></div>
             <div class="add-row" id="add"></div>
           </div>
@@ -1225,10 +1230,55 @@
       row.appendChild(actionSelector);
       const tools = document.createElement("div");
       tools.className = "row-tools";
+      const dragHandle = this._toolButton(mdiPath.drag, "Drag to reorder", false, () => {
+      });
+      dragHandle.classList.add("drag-handle");
+      dragHandle.addEventListener("pointerdown", () => {
+        row.draggable = true;
+      });
+      const disarm = () => {
+        row.draggable = false;
+      };
+      dragHandle.addEventListener("pointerup", disarm);
+      dragHandle.addEventListener("pointercancel", disarm);
+      tools.appendChild(dragHandle);
       tools.appendChild(this._toolButton(mdiPath.up, "Move up", index === 0, () => this._move(index, -1)));
       tools.appendChild(this._toolButton(mdiPath.down, "Move down", index === count - 1, () => this._move(index, 1)));
       tools.appendChild(this._toolButton(mdiPath.remove, "Remove", false, () => this._remove(index)));
       row.appendChild(tools);
+      row.addEventListener("dragstart", (ev) => {
+        this._dragIndex = index;
+        row.classList.add("dragging");
+        if (ev.dataTransfer) {
+          ev.dataTransfer.effectAllowed = "move";
+          try {
+            ev.dataTransfer.setData("text/plain", String(index));
+          } catch (_e) {
+          }
+        }
+      });
+      row.addEventListener("dragend", () => {
+        row.draggable = false;
+        row.classList.remove("dragging");
+        this._dragIndex = null;
+        this._clearDropMarkers();
+      });
+      row.addEventListener("dragover", (ev) => {
+        if (this._dragIndex == null || this._dragIndex === index) return;
+        ev.preventDefault();
+        if (ev.dataTransfer) ev.dataTransfer.dropEffect = "move";
+        const rect = row.getBoundingClientRect();
+        const after = ev.clientY > rect.top + rect.height / 2;
+        this._clearDropMarkers();
+        row.classList.add(after ? "drop-after" : "drop-before");
+      });
+      row.addEventListener("drop", (ev) => {
+        if (this._dragIndex == null) return;
+        ev.preventDefault();
+        const rect = row.getBoundingClientRect();
+        const after = ev.clientY > rect.top + rect.height / 2;
+        this._dropReorder(this._dragIndex, index, after);
+      });
       row._entityPicker = entityPicker;
       row._iconPicker = iconPicker;
       row._badgeIconPicker = badgeIconPicker;
@@ -1287,6 +1337,25 @@
       const collapsed = entities.map((e) => Object.keys(e).length === 1 && e.entity ? e.entity : e);
       this._emit({ ...this._config, entities: collapsed });
       if (silent) return;
+    }
+    _clearDropMarkers() {
+      if (!this._entitiesEl) return;
+      for (const row of this._entitiesEl.children) {
+        row.classList.remove("drop-before", "drop-after");
+      }
+    }
+    // Move entity from `from` to drop near row `index` (after its midpoint or not).
+    _dropReorder(from, index, after) {
+      this._clearDropMarkers();
+      let insertIndex = after ? index + 1 : index;
+      if (from < insertIndex) insertIndex--;
+      if (insertIndex === from) return;
+      const entities = [...this._entities];
+      const [moved] = entities.splice(from, 1);
+      entities.splice(insertIndex, 0, moved);
+      this._dragIndex = null;
+      this._emit({ ...this._config, entities });
+      this._renderEntities();
     }
     _move(index, delta) {
       const entities = [...this._entities];
