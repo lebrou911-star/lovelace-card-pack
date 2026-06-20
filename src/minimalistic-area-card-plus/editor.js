@@ -495,6 +495,9 @@ class MinimalisticAreaCardPlusEditor extends HTMLElement {
     actionSelector.classList.add("full");
     actionSelector.addEventListener("value-changed", (ev) => {
       ev.stopPropagation();
+      // Feed the value back so the selection sticks: we suppress the row
+      // rebuild (to keep input focus), so the selector must hold its own value.
+      actionSelector.value = ev.detail.value;
       this._updateEntity(index, "tap_action", ev.detail.value);
     });
     row.appendChild(actionSelector);

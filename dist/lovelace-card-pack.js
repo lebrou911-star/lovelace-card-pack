@@ -1,4 +1,4 @@
-/*! lovelace-card-pack v0.3.0 | https://github.com/lebrou911-star/lovelace-card-pack */
+/*! lovelace-card-pack v0.3.1 | https://github.com/lebrou911-star/lovelace-card-pack */
 (() => {
   var __defProp = Object.defineProperty;
   var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
@@ -1307,6 +1307,7 @@
       actionSelector.classList.add("full");
       actionSelector.addEventListener("value-changed", (ev) => {
         ev.stopPropagation();
+        actionSelector.value = ev.detail.value;
         this._updateEntity(index, "tap_action", ev.detail.value);
       });
       row.appendChild(actionSelector);
@@ -1457,7 +1458,7 @@
   };
 
   // src/minimalistic-area-card-plus/minimalistic-area-card-plus.js
-  var VERSION2 = true ? "0.3.0" : "dev";
+  var VERSION2 = true ? "0.3.1" : "dev";
   var CARD_TYPE = "minimalistic-area-card-plus";
   var EDITOR_TYPE = "minimalistic-area-card-plus-editor";
   var UNAVAILABLE = "unavailable";
@@ -2143,7 +2144,7 @@
   );
 
   // src/index.js
-  var VERSION3 = true ? "0.3.0" : "dev";
+  var VERSION3 = true ? "0.3.1" : "dev";
   console.info(
     `%c LOVELACE-CARD-PACK %c v${VERSION3} `,
     "color: white; background: #6d28d9; font-weight: 700; border-radius: 3px 0 0 3px;",

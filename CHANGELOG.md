@@ -3,6 +3,15 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.3.1] - 2026-06-20
+
+### Fixed
+- `minimalistic-area-card-plus` editor: choosing a per-entity "Tap action" did
+  nothing — the selection cleared itself. Since 0.2.5 the editor suppresses the
+  row rebuild (to keep input focus), so the `ui_action` selector no longer got
+  its value refreshed. It now feeds the chosen value back to itself, so the
+  selection sticks.
+
 ## [0.3.0] - 2026-06-20
 
 ### Added
@@ -185,6 +194,7 @@ one shot via HACS.
   - alignment controls for the bottom sensor row so text-valued states
     (e.g. `idle`) stay aligned with numeric ones.
 
+[0.3.1]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.3.1
 [0.3.0]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.3.0
 [0.2.9]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.2.9
 [0.2.8]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.2.8
