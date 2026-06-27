@@ -3,20 +3,23 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.13.0] - 2026-06-27
+
+### Changed
+- **`minimalistic-area-card-extender`** is now the **trigger** half of the
+  two-card pattern (keeping the separate `expander-child`), not a self-contained
+  card. Give it a `hash` (e.g. `#garage`) and it wires up, on the underlying
+  `minimalistic-area-card-plus`, the tap → navigate to that hash (so the matching
+  `expander-child` reveals/collapses inline) **and** the accent `active_border`
+  while the child is open. Everything else is a normal minimalistic card. Its
+  editor is the full minimalistic editor plus a single "Linked popup" hash field.
+
 ## [0.12.0] - 2026-06-27
 
 ### Added
 - **`minimalistic-area-card-extender`** (`custom:minimalistic-area-card-extender`):
-  a self-contained card that is a `minimalistic-area-card-plus` **plus** an
-  inline expander. The visible part keeps every minimalistic option (image,
-  entities, templates, badges, icon sizes, `active_border`, …); underneath it
-  reveals child cards inline like `expander-card`, with all its options
-  (`child-layout` incl. `grid`, `gap`, `expanded`, `expand-on`, `group`,
-  `border-color`, …). Internally it builds an `expander-card` whose header is a
-  minimalistic card, so behaviour is the existing tested code — no duplication.
-  Its editor reuses the minimalistic editor for the visuals, adds the expander
-  options, and edits the revealed `cards` like a stack. `minimalistic-area-card-plus`
-  stays available unchanged for normal (non-expanding) use.
+  first cut as a self-contained minimalistic-plus + inline expander (superseded
+  by 0.13.0's trigger model below).
 
 ## [0.11.0] - 2026-06-27
 
