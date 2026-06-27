@@ -1,4 +1,4 @@
-/*! lovelace-card-pack v0.10.0 | https://github.com/lebrou911-star/lovelace-card-pack */
+/*! lovelace-card-pack v0.11.0 | https://github.com/lebrou911-star/lovelace-card-pack */
 (() => {
   var __defProp = Object.defineProperty;
   var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
@@ -916,7 +916,8 @@
         { name: "darken_image", selector: { boolean: {} } },
         { name: "shadow", selector: { boolean: {} } },
         { name: "state_color", selector: { boolean: {} } },
-        { name: "hide_unavailable", selector: { boolean: {} } }
+        { name: "hide_unavailable", selector: { boolean: {} } },
+        { name: "active_border", selector: { boolean: {} } }
       ]
     },
     {
@@ -1009,6 +1010,7 @@
     shadow: "Icon shadow",
     state_color: "Color icons by state",
     hide_unavailable: "Hide unavailable",
+    active_border: "Accent border when its #hash popup is open",
     icon_size: "Icon size (%)",
     interactions: "Card interactions",
     tap_action: "Tap action",
@@ -1561,7 +1563,7 @@
   };
 
   // src/minimalistic-area-card-plus/minimalistic-area-card-plus.js
-  var VERSION2 = true ? "0.10.0" : "dev";
+  var VERSION2 = true ? "0.11.0" : "dev";
   var CARD_TYPE = "minimalistic-area-card-plus";
   var EDITOR_TYPE = "minimalistic-area-card-plus-editor";
   var UNAVAILABLE = "unavailable";
@@ -1744,8 +1746,45 @@
       this._built = false;
       this._tpl = /* @__PURE__ */ new Map();
     }
+    connectedCallback() {
+      if (!this._onHashChange) this._onHashChange = () => this._applyActive();
+      window.addEventListener("location-changed", this._onHashChange);
+      window.addEventListener("popstate", this._onHashChange);
+      window.addEventListener("hashchange", this._onHashChange);
+      this._applyActive();
+    }
     disconnectedCallback() {
       this._clearTemplates();
+      if (this._onHashChange) {
+        window.removeEventListener("location-changed", this._onHashChange);
+        window.removeEventListener("popstate", this._onHashChange);
+        window.removeEventListener("hashchange", this._onHashChange);
+      }
+    }
+    // The #hash this card opens, if its tap_action navigates to one (or an
+    // explicit `active_hash`). Used to show the accent border while it's open.
+    _activeHash() {
+      const cfg = this._config;
+      if (!cfg) return null;
+      if (cfg.active_hash) {
+        const s = String(cfg.active_hash).trim();
+        return s.startsWith("#") ? s : `#${s}`;
+      }
+      const ta = cfg.tap_action;
+      if (ta && ta.action === "navigate" && typeof ta.navigation_path === "string" && ta.navigation_path.startsWith("#")) {
+        return ta.navigation_path;
+      }
+      return null;
+    }
+    // Toggle the accent border on the card when its navigation hash is active.
+    // `active_border` enables it: true -> theme accent, or a CSS colour string.
+    _applyActive() {
+      if (!this._card || !this._config) return;
+      const ab = this._config.active_border;
+      const hash = this._activeHash();
+      const on = !!ab && !!hash && window.location.hash === hash;
+      if (ab && ab !== true) this._card.style.setProperty("--cardpack-active-color", String(ab));
+      this._card.classList.toggle("cardpack-active", on);
     }
     static getConfigElement() {
       return document.createElement(EDITOR_TYPE);
@@ -1973,6 +2012,7 @@
       });
       box.appendChild(buttonsEl);
       this._card.appendChild(box);
+      this._applyActive();
     }
     _renderEntity(entityConf, dialog, isSensor, align) {
       var _a;
@@ -2181,6 +2221,13 @@
         /* clip also blocks programmatic scrolling, so focusing an icon when a
            more-info dialog closes cannot nudge the card content out of place. */
         overflow: clip;
+      }
+      /* Accent outline shown while this card's navigation hash is open (i.e. its
+         linked expander-child is expanded) — like the original expander header. */
+      ha-card.cardpack-active {
+        box-shadow:
+          inset 0 0 0 2px var(--cardpack-active-color, var(--accent-color, #ff9800)),
+          var(--ha-card-box-shadow, none);
       }
       img {
         display: block;
@@ -2753,7 +2800,7 @@
   );
 
   // src/index.js
-  var VERSION4 = true ? "0.10.0" : "dev";
+  var VERSION4 = true ? "0.11.0" : "dev";
   console.info(
     `%c LOVELACE-CARD-PACK %c v${VERSION4} `,
     "color: white; background: #6d28d9; font-weight: 700; border-radius: 3px 0 0 3px;",

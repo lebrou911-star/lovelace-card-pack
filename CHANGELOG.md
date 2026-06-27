@@ -3,6 +3,16 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.11.0] - 2026-06-27
+
+### Added
+- **`minimalistic-area-card-plus`**: new `active_border` option. When set, the
+  card shows an accent outline (default theme `--accent-color`, i.e. orange; or
+  pass a CSS colour string) while its linked popup is open — i.e. while the URL
+  hash equals the card's `tap_action` navigate target (or an explicit
+  `active_hash`). This mirrors the original expander lighting up its header when
+  expanded. The card now listens for hash/navigation changes to toggle it live.
+
 ## [0.10.0] - 2026-06-27
 
 ### Removed

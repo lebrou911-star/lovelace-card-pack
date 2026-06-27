@@ -61,6 +61,7 @@ const MAIN_SCHEMA = [
       { name: "shadow", selector: { boolean: {} } },
       { name: "state_color", selector: { boolean: {} } },
       { name: "hide_unavailable", selector: { boolean: {} } },
+      { name: "active_border", selector: { boolean: {} } },
     ],
   },
   {
@@ -157,6 +158,7 @@ const LABELS = {
   shadow: "Icon shadow",
   state_color: "Color icons by state",
   hide_unavailable: "Hide unavailable",
+  active_border: "Accent border when its #hash popup is open",
   icon_size: "Icon size (%)",
   interactions: "Card interactions",
   tap_action: "Tap action",

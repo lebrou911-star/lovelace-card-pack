@@ -239,8 +239,55 @@ class MinimalisticAreaCardPlus extends HTMLElement {
     this._tpl = new Map();
   }
 
+  connectedCallback() {
+    // Track the URL hash so we can light up this card while its linked
+    // expander-child (tap_action: navigate to a #hash) is open.
+    if (!this._onHashChange) this._onHashChange = () => this._applyActive();
+    window.addEventListener("location-changed", this._onHashChange);
+    window.addEventListener("popstate", this._onHashChange);
+    window.addEventListener("hashchange", this._onHashChange);
+    this._applyActive();
+  }
+
   disconnectedCallback() {
     this._clearTemplates();
+    if (this._onHashChange) {
+      window.removeEventListener("location-changed", this._onHashChange);
+      window.removeEventListener("popstate", this._onHashChange);
+      window.removeEventListener("hashchange", this._onHashChange);
+    }
+  }
+
+  // The #hash this card opens, if its tap_action navigates to one (or an
+  // explicit `active_hash`). Used to show the accent border while it's open.
+  _activeHash() {
+    const cfg = this._config;
+    if (!cfg) return null;
+    if (cfg.active_hash) {
+      const s = String(cfg.active_hash).trim();
+      return s.startsWith("#") ? s : `#${s}`;
+    }
+    const ta = cfg.tap_action;
+    if (
+      ta &&
+      ta.action === "navigate" &&
+      typeof ta.navigation_path === "string" &&
+      ta.navigation_path.startsWith("#")
+    ) {
+      return ta.navigation_path;
+    }
+    return null;
+  }
+
+  // Toggle the accent border on the card when its navigation hash is active.
+  // `active_border` enables it: true -> theme accent, or a CSS colour string.
+  _applyActive() {
+    if (!this._card || !this._config) return;
+    const ab = this._config.active_border;
+    const hash = this._activeHash();
+    const on = !!ab && !!hash && window.location.hash === hash;
+    if (ab && ab !== true) this._card.style.setProperty("--cardpack-active-color", String(ab));
+    this._card.classList.toggle("cardpack-active", on);
   }
 
   static getConfigElement() {
@@ -525,6 +572,7 @@ class MinimalisticAreaCardPlus extends HTMLElement {
     box.appendChild(buttonsEl);
 
     this._card.appendChild(box);
+    this._applyActive();
   }
 
   _renderEntity(entityConf, dialog, isSensor, align) {
@@ -778,6 +826,13 @@ class MinimalisticAreaCardPlus extends HTMLElement {
         /* clip also blocks programmatic scrolling, so focusing an icon when a
            more-info dialog closes cannot nudge the card content out of place. */
         overflow: clip;
+      }
+      /* Accent outline shown while this card's navigation hash is open (i.e. its
+         linked expander-child is expanded) — like the original expander header. */
+      ha-card.cardpack-active {
+        box-shadow:
+          inset 0 0 0 2px var(--cardpack-active-color, var(--accent-color, #ff9800)),
+          var(--ha-card-box-shadow, none);
       }
       img {
         display: block;
