@@ -1,11 +1,11 @@
-/*! lovelace-card-pack v0.5.2 | https://github.com/lebrou911-star/lovelace-card-pack */
+/*! lovelace-card-pack v0.5.3 | https://github.com/lebrou911-star/lovelace-card-pack */
 (() => {
   var __defProp = Object.defineProperty;
   var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
   var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
 
   // src/expander-card/expander-card.js
-  var VERSION = "0.22.0";
+  var VERSION = "0.23.0";
   function resolveHeaderWidth(v) {
     if (v == null || v === "" || v === 0 || v === "0") return null;
     if (typeof v === "number") {
@@ -457,6 +457,7 @@
     expanded: "Start expanded"
   };
   var MDI_DELETE = "M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z";
+  var MDI_ARROW_LEFT = "M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z";
   var MDI_ARROW_UP = "M13,20H11V8L5.5,13.5L4.08,12.08L12,4.16L19.92,12.08L18.5,13.5L13,8V20Z";
   var MDI_ARROW_DOWN = "M11,4H13V16L18.5,10.5L19.92,11.92L12,19.84L4.08,11.92L5.5,10.5L11,16V4Z";
   var MDI_PENCIL = "M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z";
@@ -735,67 +736,68 @@
       if (this._openCardIndex != null && this._openCardIndex >= cards.length) {
         this._openCardIndex = null;
       }
-      cards.forEach((card, index) => {
-        const open = this._openCardIndex === index;
-        const row = document.createElement("div");
-        row.style.border = "1px solid var(--divider-color, #e0e0e0)";
-        row.style.borderRadius = "8px";
-        row.style.padding = "8px";
+      if (this._openCardIndex != null) {
+        const index = this._openCardIndex;
+        const card = cards[index];
         const bar = document.createElement("div");
         bar.style.display = "flex";
         bar.style.alignItems = "center";
-        bar.style.justifyContent = "space-between";
+        bar.style.gap = "8px";
+        bar.style.marginBottom = "8px";
+        bar.appendChild(
+          this._iconButton(MDI_ARROW_LEFT, "Back to card list", false, () => this._closeCard())
+        );
+        const heading = document.createElement("span");
+        const type = card && card.type ? String(card.type).replace(/^custom:/, "") : "?";
+        heading.textContent = `Card ${index + 1} — ${type}`;
+        heading.style.fontWeight = "600";
+        bar.appendChild(heading);
+        this._cardsContainer.appendChild(bar);
+        const ed = this._makeCardEditor(card, (v) => {
+          const next = [...this._config.cards];
+          next[index] = v;
+          this._config = { ...this._config, cards: next };
+          this._emit();
+        });
+        this._listEds.push(ed);
+        this._cardsContainer.appendChild(ed);
+        return;
+      }
+      cards.forEach((card, index) => {
+        const row = document.createElement("div");
+        row.style.display = "flex";
+        row.style.alignItems = "center";
+        row.style.justifyContent = "space-between";
+        row.style.border = "1px solid var(--divider-color, #e0e0e0)";
+        row.style.borderRadius = "8px";
+        row.style.padding = "8px";
         const title = document.createElement("span");
         const type = card && card.type ? String(card.type).replace(/^custom:/, "") : "?";
         title.textContent = `Card ${index + 1} — ${type}`;
         title.style.fontWeight = "600";
         title.style.cursor = "pointer";
-        title.addEventListener("click", () => this._toggleCard(index));
+        title.style.flex = "1";
+        title.addEventListener("click", () => this._openCard(index));
         const tools = document.createElement("div");
         tools.appendChild(
-          this._iconButton(MDI_ARROW_UP, "Move up", index === 0, () => {
-            this._openCardIndex = null;
-            this._moveCard(index, -1);
-          })
+          this._iconButton(MDI_ARROW_UP, "Move up", index === 0, () => this._moveCard(index, -1))
         );
         tools.appendChild(
-          this._iconButton(MDI_ARROW_DOWN, "Move down", index === cards.length - 1, () => {
-            this._openCardIndex = null;
-            this._moveCard(index, 1);
-          })
+          this._iconButton(
+            MDI_ARROW_DOWN,
+            "Move down",
+            index === cards.length - 1,
+            () => this._moveCard(index, 1)
+          )
         );
         tools.appendChild(
-          this._iconButton(MDI_PENCIL, open ? "Close" : "Edit", false, () => this._toggleCard(index))
+          this._iconButton(MDI_PENCIL, "Edit", false, () => this._openCard(index))
         );
         tools.appendChild(
-          this._iconButton(MDI_DELETE, "Delete", false, () => {
-            this._openCardIndex = null;
-            this._deleteCard(index);
-          })
+          this._iconButton(MDI_DELETE, "Delete", false, () => this._deleteCard(index))
         );
-        bar.appendChild(title);
-        bar.appendChild(tools);
-        row.appendChild(bar);
-        if (open) {
-          const ed = this._makeCardEditor(card, (v) => {
-            const next = [...this._config.cards];
-            next[index] = v;
-            this._config = { ...this._config, cards: next };
-            this._emit();
-          });
-          this._listEds.push(ed);
-          const body = document.createElement("div");
-          body.style.marginTop = "8px";
-          body.appendChild(ed);
-          row.appendChild(body);
-        } else {
-          const ph = document.createElement("div");
-          ph.textContent = "Content is hidden for performance reasons.";
-          ph.style.marginTop = "6px";
-          ph.style.fontSize = "0.85em";
-          ph.style.color = "var(--secondary-text-color)";
-          row.appendChild(ph);
-        }
+        row.appendChild(title);
+        row.appendChild(tools);
         this._cardsContainer.appendChild(row);
       });
       if (customElements.get("hui-card-picker")) {
@@ -807,6 +809,7 @@
           const next = [...this._config.cards || [], ev.detail.config];
           this._config = { ...this._config, cards: next };
           this._emit();
+          this._openCardIndex = next.length - 1;
           this._renderCardsList();
         });
         this._picker = picker;
@@ -819,14 +822,20 @@
           const next = [...this._config.cards || [], { type: "entities", entities: [] }];
           this._config = { ...this._config, cards: next };
           this._emit();
+          this._openCardIndex = next.length - 1;
           this._renderCardsList();
         });
         this._cardsContainer.appendChild(add);
       }
     }
-    // Open one child card's editor (closing any other) or close it if already open.
-    _toggleCard(index) {
-      this._openCardIndex = this._openCardIndex === index ? null : index;
+    // Navigate into a single child card's editor (EDIT screen).
+    _openCard(index) {
+      this._openCardIndex = index;
+      this._renderCardsList();
+    }
+    // Return from the EDIT screen back to the LIST screen.
+    _closeCard() {
+      this._openCardIndex = null;
       this._renderCardsList();
     }
     _moveCard(index, delta) {
@@ -1552,7 +1561,7 @@
   };
 
   // src/minimalistic-area-card-plus/minimalistic-area-card-plus.js
-  var VERSION2 = true ? "0.5.2" : "dev";
+  var VERSION2 = true ? "0.5.3" : "dev";
   var CARD_TYPE = "minimalistic-area-card-plus";
   var EDITOR_TYPE = "minimalistic-area-card-plus-editor";
   var UNAVAILABLE = "unavailable";
@@ -2348,7 +2357,7 @@
   );
 
   // src/index.js
-  var VERSION3 = true ? "0.5.2" : "dev";
+  var VERSION3 = true ? "0.5.3" : "dev";
   console.info(
     `%c LOVELACE-CARD-PACK %c v${VERSION3} `,
     "color: white; background: #6d28d9; font-weight: 700; border-radius: 3px 0 0 3px;",

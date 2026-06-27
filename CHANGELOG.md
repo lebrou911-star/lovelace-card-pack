@@ -3,6 +3,18 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.5.3] - 2026-06-27
+
+### Changed
+- `expander-card` (0.23.0) editor: the child-cards editor is now **navigation
+  based** (true Bubble Card style). A LIST screen shows one light row per child
+  card (type + move / edit / delete, no nested editor mounted at all); clicking
+  a row or the pencil **navigates** to an EDIT screen that swaps the whole area
+  for that single card's editor plus a **← Back** button. Only one editor is
+  ever mounted at a time. Adding a card via the picker jumps straight into its
+  EDIT screen. Editing only touches `cards`, so `child-layout` (incl. `grid`)
+  is preserved; runtime rendering is unchanged.
+
 ## [0.5.2] - 2026-06-20
 
 ### Changed
