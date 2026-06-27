@@ -7,7 +7,7 @@
  *
  * License: MIT
  */
-const VERSION = "0.21.0";
+const VERSION = "0.22.0";
 
 // Resolve a header-width value into a CSS max-width.
 // 1..12 -> fraction of 12 columns; a bare number -> px; a CSS string used as-is.
@@ -844,42 +844,11 @@ class ExpanderCardEditor extends HTMLElement {
     this._stackEd = null;
     this._cardsContainer.innerHTML = "";
 
-    // Best UI: reuse HA's native stack-card editor — tabs, add (+), move,
-    // duplicate, delete, and the "Stack horizontally" toggle. We feed it a
-    // vertical/horizontal-stack config and read the cards (and orientation)
-    // back out.
-    if (customElements.get("hui-stack-card-editor")) {
-      const horizontal = this._config["child-layout"] === "horizontal";
-      const ed = document.createElement("hui-stack-card-editor");
-      ed.hass = this._hass;
-      ed.lovelace = this._lovelace;
-      ed.setConfig({
-        type: horizontal ? "horizontal-stack" : "vertical-stack",
-        cards: this._config.cards || [],
-      });
-      ed.addEventListener("config-changed", (ev) => {
-        ev.stopPropagation();
-        const cfg = ev.detail.config || {};
-        // Sync child-layout from the stack type ONLY when it's currently
-        // vertical/horizontal. Preserve any other value (e.g. "grid") so editing
-        // the children doesn't reset the grid layout to vertical.
-        const prev = this._config["child-layout"];
-        const keepLayout = prev !== "vertical" && prev !== "horizontal";
-        this._config = {
-          ...this._config,
-          cards: Array.isArray(cfg.cards) ? cfg.cards : [],
-          "child-layout": keepLayout
-            ? prev
-            : cfg.type === "horizontal-stack"
-            ? "horizontal"
-            : "vertical",
-        };
-        this._emit();
-      });
-      this._stackEd = ed;
-      this._cardsContainer.appendChild(ed);
-      return;
-    }
+    // Child cards are edited as a lazy collapsed list (Bubble Card style): a row
+    // per card, and the real per-card editor mounts only for the one you open.
+    // We intentionally don't use HA's hui-stack-card-editor here — it forces a
+    // vertical/horizontal-stack model and would fight the `grid` child-layout.
+    // Editing only ever touches `cards`, so child-layout (incl. "grid") is kept.
 
     // Fallback: a single YAML editor for the whole list.
     if (!this._hasNativeEditor) {
@@ -957,7 +926,7 @@ class ExpanderCardEditor extends HTMLElement {
         row.appendChild(body);
       } else {
         const ph = document.createElement("div");
-        ph.textContent = "Content hidden for performance reasons";
+        ph.textContent = "Content is hidden for performance reasons.";
         ph.style.marginTop = "6px";
         ph.style.fontSize = "0.85em";
         ph.style.color = "var(--secondary-text-color)";
