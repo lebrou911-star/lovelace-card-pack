@@ -3,6 +3,17 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.0] - 2026-06-27
+
+### Changed
+- **`expander-child`** (expander-pair 0.4.0): the content now reveals **inline
+  (accordion)** right where the card sits — pushing the cards below it down —
+  instead of sliding up as a floating popup/dialog. This matches the original
+  expander behaviour. Height animates via `grid-template-rows` (0fr → 1fr). A
+  collapse bar (title + ▲) closes it (toggle with `show_header: false`); Back and
+  Escape still collapse it. The `width` option is dropped (no longer an overlay);
+  `placeholder`/`show_header` control the collapsed marker and the bar.
+
 ## [0.8.0] - 2026-06-27
 
 ### Changed

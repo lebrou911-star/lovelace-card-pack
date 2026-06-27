@@ -1,4 +1,4 @@
-/*! lovelace-card-pack v0.8.0 | https://github.com/lebrou911-star/lovelace-card-pack */
+/*! lovelace-card-pack v0.9.0 | https://github.com/lebrou911-star/lovelace-card-pack */
 (() => {
   var __defProp = Object.defineProperty;
   var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
@@ -1561,7 +1561,7 @@
   };
 
   // src/minimalistic-area-card-plus/minimalistic-area-card-plus.js
-  var VERSION2 = true ? "0.8.0" : "dev";
+  var VERSION2 = true ? "0.9.0" : "dev";
   var CARD_TYPE = "minimalistic-area-card-plus";
   var EDITOR_TYPE = "minimalistic-area-card-plus-editor";
   var UNAVAILABLE = "unavailable";
@@ -2357,9 +2357,9 @@
   );
 
   // src/expander-pair/expander-pair.js
-  var VERSION3 = "0.3.0";
-  var MDI_CLOSE = "M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z";
+  var VERSION3 = "0.4.0";
   var MDI_CHEVRON_RIGHT = "M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z";
+  var MDI_CHEVRON_UP = "M7.41,15.41L12,10.83L16.59,15.41L18,14L12,8L6,14L7.41,15.41Z";
   function normHash(v) {
     if (!v) return "";
     const s = String(v).trim();
@@ -2483,11 +2483,10 @@
     _build() {
       if (this._built) return;
       const showPlaceholder = this._config.placeholder !== false;
-      const w = this._config.width || "540px";
-      const width = /^\d+$/.test(String(w)) ? `${w}px` : w;
+      const hideHeader = this._config.show_header === false;
       this.shadowRoot.innerHTML = `
       <style>
-        :host { display: ${showPlaceholder ? "block" : "contents"}; }
+        :host { display: block; }
         .placeholder {
           display: ${showPlaceholder ? "flex" : "none"};
           align-items: center; gap: 8px;
@@ -2497,51 +2496,45 @@
           color: var(--secondary-text-color);
           font-size: 0.85rem;
         }
-        .backdrop {
-          position: fixed; inset: 0;
-          background: rgba(0, 0, 0, 0.55);
-          backdrop-filter: blur(2px);
-          opacity: 0; pointer-events: none;
-          transition: opacity 0.25s ease;
-          z-index: 8;
+        :host([data-open]) .placeholder { display: none; }
+
+        /* Inline accordion: animate height via grid-template-rows 0fr -> 1fr,
+           so opening pushes the cards below it down (no overlay). */
+        .wrap {
+          display: grid;
+          grid-template-rows: 0fr;
+          transition: grid-template-rows 0.3s ease;
         }
-        .sheet {
-          position: fixed; left: 50%; bottom: 0;
-          transform: translate(-50%, 100%);
-          width: min(${width}, 96vw);
-          max-height: 86vh;
-          display: flex; flex-direction: column;
-          background: var(--ha-card-background, var(--card-background-color, #fff));
-          border-radius: var(--ha-card-border-radius, 28px) var(--ha-card-border-radius, 28px) 0 0;
-          box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.35);
-          transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1);
-          z-index: 9; overflow: hidden;
+        :host([data-open]) .wrap { grid-template-rows: 1fr; }
+        .inner { overflow: hidden; min-height: 0; }
+        .panel { display: flex; flex-direction: column; gap: 8px; padding-top: 8px; }
+        .closebar {
+          display: ${hideHeader ? "none" : "flex"};
+          align-items: center; justify-content: space-between;
+          padding: 4px 4px 0; cursor: pointer;
         }
-        :host([data-open]) .backdrop { opacity: 1; pointer-events: auto; }
-        :host([data-open]) .sheet { transform: translate(-50%, 0); }
-        .header { display: flex; align-items: center; gap: 8px; padding: 14px 16px 8px; }
-        .header .title { font-size: 1.3rem; font-weight: 600; flex: 1; }
-        .header ha-icon-button { --mdc-icon-button-size: 40px; color: var(--secondary-text-color); }
-        .body { padding: 8px 16px 24px; overflow-y: auto; }
+        .closebar .t { font-weight: 600; color: var(--primary-text-color); }
+        .closebar ha-svg-icon { color: var(--secondary-text-color); --mdc-icon-size: 22px; }
+        .body { display: block; }
       </style>
 
-      <div class="placeholder">⤵ expander-child → ${this._hash} (opens on ${this._hash})</div>
+      <div class="placeholder">⤵ expander-child → ${this._hash} (s'insère ici quand ${this._hash} est actif)</div>
 
-      <div class="backdrop"></div>
-      <div class="sheet" role="dialog" aria-modal="true">
-        <div class="header">
-          <div class="title">${this._config.title || ""}</div>
-          <ha-icon-button class="close" label="Close"></ha-icon-button>
+      <div class="wrap"><div class="inner">
+        <div class="panel">
+          <div class="closebar" title="Réduire">
+            <span class="t">${this._config.title || ""}</span>
+            <ha-svg-icon class="chev"></ha-svg-icon>
+          </div>
+          <div class="body"></div>
         </div>
-        <div class="body"></div>
-      </div>
+      </div></div>
     `;
-      this._backdrop = this.shadowRoot.querySelector(".backdrop");
       this._bodyEl = this.shadowRoot.querySelector(".body");
-      const closeBtn = this.shadowRoot.querySelector(".close");
-      if (closeBtn) closeBtn.path = MDI_CLOSE;
-      this._backdrop.addEventListener("click", () => this.close());
-      if (closeBtn) closeBtn.addEventListener("click", () => this.close());
+      const chev = this.shadowRoot.querySelector(".chev");
+      if (chev) chev.path = MDI_CHEVRON_UP;
+      const closebar = this.shadowRoot.querySelector(".closebar");
+      if (closebar) closebar.addEventListener("click", () => this.close());
       this._built = true;
     }
     async _buildContent() {
@@ -2648,14 +2641,14 @@
   var CHILD_SCHEMA = [
     { name: "hash", selector: { text: {} } },
     { name: "title", selector: { text: {} } },
-    { name: "width", selector: { text: {} } },
+    { name: "show_header", selector: { boolean: {} } },
     { name: "placeholder", selector: { boolean: {} } }
   ];
   var CHILD_LABELS = {
-    hash: "Hash that opens it (e.g. #garage) — must match the header",
-    title: "Title (shown at the top of the popup)",
-    width: "Width (e.g. 540px — optional)",
-    placeholder: "Show a placeholder in the dashboard (easier to edit)"
+    hash: "Hash that reveals it (e.g. #garage) — must match the trigger",
+    title: "Title (shown on the collapse bar)",
+    show_header: "Show the collapse bar (title + ▲ to close)",
+    placeholder: "Show a placeholder when collapsed (easier to edit)"
   };
   var ExpanderChildEditor = class extends HTMLElement {
     setConfig(config) {
@@ -2759,7 +2752,7 @@
       return {
         hash: this._config.hash || "",
         title: this._config.title || "",
-        width: this._config.width || "",
+        show_header: this._config.show_header !== false,
         placeholder: this._config.placeholder !== false
       };
     }
@@ -2839,7 +2832,7 @@
     {
       type: "expander-child",
       name: "Expander Child",
-      description: "The popup content (Bubble Card style). Hidden until its #hash is open; its content is a normal card."
+      description: "Hidden content that reveals inline (accordion) when its #hash is active. Edited like a stack."
     }
   ].forEach((c) => {
     if (!window.customCards.some((x) => x.type === c.type)) {
@@ -2857,7 +2850,7 @@
   );
 
   // src/index.js
-  var VERSION4 = true ? "0.8.0" : "dev";
+  var VERSION4 = true ? "0.9.0" : "dev";
   console.info(
     `%c LOVELACE-CARD-PACK %c v${VERSION4} `,
     "color: white; background: #6d28d9; font-weight: 700; border-radius: 3px 0 0 3px;",
