@@ -1,4 +1,4 @@
-/*! lovelace-card-pack v0.14.4 | https://github.com/lebrou911-star/lovelace-card-pack */
+/*! lovelace-card-pack v0.14.5 | https://github.com/lebrou911-star/lovelace-card-pack */
 (() => {
   var __defProp = Object.defineProperty;
   var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
@@ -1563,7 +1563,7 @@
   };
 
   // src/minimalistic-area-card-plus/minimalistic-area-card-plus.js
-  var VERSION2 = true ? "0.14.4" : "dev";
+  var VERSION2 = true ? "0.14.5" : "dev";
   var CARD_TYPE = "minimalistic-area-card-plus";
   var EDITOR_TYPE = "minimalistic-area-card-plus-editor";
   var UNAVAILABLE = "unavailable";
@@ -2404,7 +2404,7 @@
   );
 
   // src/minimalistic-area-card-extender/minimalistic-area-card-extender.js
-  var VERSION3 = true ? "0.14.4" : "dev";
+  var VERSION3 = true ? "0.14.5" : "dev";
   var CARD_TYPE2 = "minimalistic-area-card-extender";
   var EDITOR_TYPE2 = "minimalistic-area-card-extender-editor";
   var HEADER_EL = "minimalistic-area-card-plus";
@@ -2664,7 +2664,7 @@
         ev.stopPropagation();
         const v = { ...ev.detail.config };
         delete v.type;
-        const keep = {};
+        const keep = { type: this._config.type || `custom:${CARD_TYPE2}` };
         for (const k in this._config) {
           if (EXPANDER_KEYS.has(k) || EXTENDER_KEYS.has(k)) keep[k] = this._config[k];
         }
@@ -3171,7 +3171,7 @@
   );
 
   // src/index.js
-  var VERSION5 = true ? "0.14.4" : "dev";
+  var VERSION5 = true ? "0.14.5" : "dev";
   console.info(
     `%c LOVELACE-CARD-PACK %c v${VERSION5} `,
     "color: white; background: #6d28d9; font-weight: 700; border-radius: 3px 0 0 3px;",

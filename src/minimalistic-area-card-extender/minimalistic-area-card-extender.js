@@ -320,8 +320,10 @@ class MinimalisticAreaCardExtenderEditor extends HTMLElement {
     visual.addEventListener("config-changed", (ev) => {
       ev.stopPropagation();
       const v = { ...ev.detail.config };
-      delete v.type;
-      const keep = {};
+      delete v.type; // drop the inner minimalistic header type
+      // Preserve the EXTENDER's own type + its expander/extender-only keys,
+      // otherwise the emitted config loses `type` ("No type provided").
+      const keep = { type: this._config.type || `custom:${CARD_TYPE}` };
       for (const k in this._config) {
         if (EXPANDER_KEYS.has(k) || EXTENDER_KEYS.has(k)) keep[k] = this._config[k];
       }

@@ -3,6 +3,16 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.14.5] - 2026-06-27
+
+### Fixed
+- **`minimalistic-area-card-extender`** editor: editing the visual part (e.g.
+  removing an entity) dropped the card's `type`, causing a "No type provided"
+  Configuration error and a fall back to the YAML editor. The embedded
+  minimalistic editor emits its own `type`, which was deleted without restoring
+  the extender's `type`. The handler now preserves
+  `custom:minimalistic-area-card-extender`.
+
 ## [0.14.4] - 2026-06-27
 
 ### Fixed
