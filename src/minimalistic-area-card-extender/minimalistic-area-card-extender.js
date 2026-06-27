@@ -145,10 +145,14 @@ class MinimalisticAreaCardExtender extends HTMLElement {
     return this._el && typeof this._el.getCardSize === "function" ? this._el.getCardSize() : 3;
   }
 
-  // NOTE: intentionally NO getGridOptions(). Like expander-card and
-  // minimalistic-area-card-plus, leaving it undefined lets HA's Sections view
-  // honour the config's `grid_options.columns` natively. Defining the method
-  // (even returning the config) makes HA fall back to full width.
+  // Declare grid support so HA's Sections view shows the "Layout" tab and lets
+  // the card be resized. Must include min/max constraints (an incomplete object
+  // or `undefined` makes HA hide Layout / force full width). The user's own
+  // `grid_options` is spread last so its `columns` wins.
+  getGridOptions() {
+    const cfg = (this._config && this._config.grid_options) || {};
+    return { columns: 12, rows: "auto", min_columns: 1, max_columns: 12, min_rows: 1, ...cfg };
+  }
 }
 
 if (!customElements.get(CARD_TYPE)) {

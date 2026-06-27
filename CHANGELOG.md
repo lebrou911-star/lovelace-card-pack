@@ -3,6 +3,16 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.14.3] - 2026-06-27
+
+### Fixed
+- **`minimalistic-area-card-extender`**: implement `getGridOptions()` **with full
+  constraints** (`columns/rows/min_columns/max_columns/min_rows`, user
+  `grid_options` spread last). This makes HA's Sections view show the **Layout**
+  tab in the card editor (it was missing) and honour `columns` — earlier tries
+  (undefined, or an incomplete `{columns}`) made HA hide Layout and force full
+  width.
+
 ## [0.14.2] - 2026-06-27
 
 ### Fixed
