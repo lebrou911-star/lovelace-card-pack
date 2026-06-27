@@ -1,4 +1,4 @@
-/*! lovelace-card-pack v0.14.5 | https://github.com/lebrou911-star/lovelace-card-pack */
+/*! lovelace-card-pack v0.15.0 | https://github.com/lebrou911-star/lovelace-card-pack */
 (() => {
   var __defProp = Object.defineProperty;
   var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
@@ -1563,7 +1563,7 @@
   };
 
   // src/minimalistic-area-card-plus/minimalistic-area-card-plus.js
-  var VERSION2 = true ? "0.14.5" : "dev";
+  var VERSION2 = true ? "0.15.0" : "dev";
   var CARD_TYPE = "minimalistic-area-card-plus";
   var EDITOR_TYPE = "minimalistic-area-card-plus-editor";
   var UNAVAILABLE = "unavailable";
@@ -2404,7 +2404,7 @@
   );
 
   // src/minimalistic-area-card-extender/minimalistic-area-card-extender.js
-  var VERSION3 = true ? "0.14.5" : "dev";
+  var VERSION3 = true ? "0.15.0" : "dev";
   var CARD_TYPE2 = "minimalistic-area-card-extender";
   var EDITOR_TYPE2 = "minimalistic-area-card-extender-editor";
   var HEADER_EL = "minimalistic-area-card-plus";
@@ -2644,6 +2644,40 @@
       el.appendChild(d);
       return el;
     }
+    // A collapsible section (title + arrow) via ha-expansion-panel, falling back
+    // to <details> so the editor never becomes one endless scroll.
+    _panel(title, expanded, description) {
+      let panel;
+      if (customElements.get("ha-expansion-panel")) {
+        panel = document.createElement("ha-expansion-panel");
+        panel.header = title;
+        panel.outlined = true;
+        panel.expanded = !!expanded;
+        panel.style.display = "block";
+      } else {
+        panel = document.createElement("details");
+        if (expanded) panel.open = true;
+        const s = document.createElement("summary");
+        s.textContent = title;
+        s.style.fontWeight = "600";
+        s.style.cursor = "pointer";
+        s.style.padding = "8px 0";
+        panel.appendChild(s);
+      }
+      const body = document.createElement("div");
+      body.style.padding = "8px 4px 4px";
+      if (description) {
+        const d = document.createElement("div");
+        d.textContent = description;
+        d.style.fontSize = "0.85em";
+        d.style.color = "var(--secondary-text-color)";
+        d.style.marginBottom = "8px";
+        body.appendChild(d);
+      }
+      panel.appendChild(body);
+      panel._body = body;
+      return panel;
+    }
     _render() {
       if (!this._config) return;
       if (this._rendered) {
@@ -2655,7 +2689,7 @@
       const root = document.createElement("div");
       root.style.display = "flex";
       root.style.flexDirection = "column";
-      root.style.gap = "16px";
+      root.style.gap = "12px";
       const visual = document.createElement(`${HEADER_EL}-editor`);
       visual.hass = this._hass;
       if (this._lovelace && "lovelace" in visual) visual.lovelace = this._lovelace;
@@ -2672,13 +2706,9 @@
         this._emit();
       });
       this._visualEd = visual;
-      root.appendChild(visual);
-      root.appendChild(
-        this._section(
-          "Expander",
-          "Fill Content below for an inline self-contained card, OR set a hash to open a separate expander-child."
-        )
-      );
+      const vPanel = this._panel("Apparence (carte minimalistic)", true);
+      vPanel._body.appendChild(visual);
+      root.appendChild(vPanel);
       const form = document.createElement("ha-form");
       form.hass = this._hass;
       form.data = this._optData();
@@ -2690,12 +2720,21 @@
         this._emit();
       });
       this._optForm = form;
-      root.appendChild(form);
-      root.appendChild(
-        this._section("Content (revealed inline)", "Edited like a stack. Leave empty to use the hash trigger instead.")
+      const ePanel = this._panel(
+        "Expander (comportement)",
+        false,
+        "Remplis le Contenu pour une carte auto-contenue, OU mets un hash pour ouvrir un expander-child séparé."
+      );
+      ePanel._body.appendChild(form);
+      root.appendChild(ePanel);
+      const cPanel = this._panel(
+        "Contenu déroulé (édité comme une stack)",
+        false,
+        "Laisse vide pour utiliser le déclencheur par hash à la place."
       );
       this._cardContainer = document.createElement("div");
-      root.appendChild(this._cardContainer);
+      cPanel._body.appendChild(this._cardContainer);
+      root.appendChild(cPanel);
       this._renderCardEditor();
       this.appendChild(root);
       this._rendered = true;
@@ -3171,7 +3210,7 @@
   );
 
   // src/index.js
-  var VERSION5 = true ? "0.14.5" : "dev";
+  var VERSION5 = true ? "0.15.0" : "dev";
   console.info(
     `%c LOVELACE-CARD-PACK %c v${VERSION5} `,
     "color: white; background: #6d28d9; font-weight: 700; border-radius: 3px 0 0 3px;",

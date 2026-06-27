@@ -3,6 +3,15 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.15.0] - 2026-06-27
+
+### Changed
+- **`minimalistic-area-card-extender`** editor: each section is now a
+  **collapsible panel** (title + arrow, via `ha-expansion-panel`) — "Apparence"
+  (open by default), "Expander (comportement)", and "Contenu déroulé" (collapsed)
+  — so you no longer scroll endlessly. Falls back to `<details>` if the panel
+  component isn't loaded.
+
 ## [0.14.5] - 2026-06-27
 
 ### Fixed

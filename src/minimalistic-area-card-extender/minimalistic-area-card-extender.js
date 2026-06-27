@@ -299,6 +299,41 @@ class MinimalisticAreaCardExtenderEditor extends HTMLElement {
     return el;
   }
 
+  // A collapsible section (title + arrow) via ha-expansion-panel, falling back
+  // to <details> so the editor never becomes one endless scroll.
+  _panel(title, expanded, description) {
+    let panel;
+    if (customElements.get("ha-expansion-panel")) {
+      panel = document.createElement("ha-expansion-panel");
+      panel.header = title;
+      panel.outlined = true;
+      panel.expanded = !!expanded;
+      panel.style.display = "block";
+    } else {
+      panel = document.createElement("details");
+      if (expanded) panel.open = true;
+      const s = document.createElement("summary");
+      s.textContent = title;
+      s.style.fontWeight = "600";
+      s.style.cursor = "pointer";
+      s.style.padding = "8px 0";
+      panel.appendChild(s);
+    }
+    const body = document.createElement("div");
+    body.style.padding = "8px 4px 4px";
+    if (description) {
+      const d = document.createElement("div");
+      d.textContent = description;
+      d.style.fontSize = "0.85em";
+      d.style.color = "var(--secondary-text-color)";
+      d.style.marginBottom = "8px";
+      body.appendChild(d);
+    }
+    panel.appendChild(body);
+    panel._body = body;
+    return panel;
+  }
+
   _render() {
     if (!this._config) return;
     if (this._rendered) {
@@ -310,9 +345,9 @@ class MinimalisticAreaCardExtenderEditor extends HTMLElement {
     const root = document.createElement("div");
     root.style.display = "flex";
     root.style.flexDirection = "column";
-    root.style.gap = "16px";
+    root.style.gap = "12px";
 
-    // Visual part — the whole minimalistic editor.
+    // Visual part — the whole minimalistic editor (open by default).
     const visual = document.createElement(`${HEADER_EL}-editor`);
     visual.hass = this._hass;
     if (this._lovelace && "lovelace" in visual) visual.lovelace = this._lovelace;
@@ -331,15 +366,11 @@ class MinimalisticAreaCardExtenderEditor extends HTMLElement {
       this._emit();
     });
     this._visualEd = visual;
-    root.appendChild(visual);
+    const vPanel = this._panel("Apparence (carte minimalistic)", true);
+    vPanel._body.appendChild(visual);
+    root.appendChild(vPanel);
 
-    // Extender / expander options.
-    root.appendChild(
-      this._section(
-        "Expander",
-        "Fill Content below for an inline self-contained card, OR set a hash to open a separate expander-child."
-      )
-    );
+    // Extender / expander options (collapsed).
     const form = document.createElement("ha-form");
     form.hass = this._hass;
     form.data = this._optData();
@@ -351,14 +382,23 @@ class MinimalisticAreaCardExtenderEditor extends HTMLElement {
       this._emit();
     });
     this._optForm = form;
-    root.appendChild(form);
+    const ePanel = this._panel(
+      "Expander (comportement)",
+      false,
+      "Remplis le Contenu pour une carte auto-contenue, OU mets un hash pour ouvrir un expander-child séparé."
+    );
+    ePanel._body.appendChild(form);
+    root.appendChild(ePanel);
 
-    // Revealed content (self-contained) — edited like a stack.
-    root.appendChild(
-      this._section("Content (revealed inline)", "Edited like a stack. Leave empty to use the hash trigger instead.")
+    // Revealed content (collapsed) — edited like a stack.
+    const cPanel = this._panel(
+      "Contenu déroulé (édité comme une stack)",
+      false,
+      "Laisse vide pour utiliser le déclencheur par hash à la place."
     );
     this._cardContainer = document.createElement("div");
-    root.appendChild(this._cardContainer);
+    cPanel._body.appendChild(this._cardContainer);
+    root.appendChild(cPanel);
     this._renderCardEditor();
 
     this.appendChild(root);
