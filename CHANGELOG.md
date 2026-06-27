@@ -3,6 +3,13 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.16.1] - 2026-06-27
+
+### Changed
+- **`minimalistic-area-card-plus`** editor: the **Entities** section is now a
+  collapsible `<details>` (arrow header, open by default) like the other
+  sections, so you can fold the entity list to keep the editor short.
+
 ## [0.16.0] - 2026-06-27
 
 ### Changed

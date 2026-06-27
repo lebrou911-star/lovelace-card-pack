@@ -294,12 +294,12 @@ class MinimalisticAreaCardPlusEditor extends HTMLElement {
         </style>
         <div class="editor">
           <div id="main"></div>
-          <div>
-            <div class="section-title">Entities</div>
+          <details class="section" open>
+            <summary>Entities</summary>
             <div class="hint">Reorder by dragging the ⠿ handle (or the arrows). Tap “Advanced” on a row for colour, size, badge & templates.</div>
             <div class="entities" id="entities"></div>
             <div class="add-row" id="add"></div>
-          </div>
+          </details>
           <details class="section">
             <summary>Sensor row alignment</summary>
             <div class="hint">Keep text values (e.g. “idle”) aligned with numeric ones.</div>
