@@ -3,14 +3,22 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.14.2] - 2026-06-27
+
+### Fixed
+- **`minimalistic-area-card-extender`**: removed `getGridOptions()` entirely.
+  Merely defining the method (even returning the config) made HA's Sections view
+  fall back to full (12-col) width, ignoring `grid_options.columns`. Like
+  `expander-card`/`minimalistic-area-card-plus` (which never defined it), leaving
+  it undefined lets HA honour `grid_options: { columns: 6 }` natively — header at
+  half width, with `breakout: true` for full-width revealed content.
+
 ## [0.14.1] - 2026-06-27
 
 ### Fixed
-- **`minimalistic-area-card-extender`**: `getGridOptions()` returned `undefined`,
-  which made HA's Sections view ignore the card's `grid_options.columns` and
-  force full (12-col) width. It now returns the config's `grid_options` (merged
-  over the inner card's), so e.g. `grid_options: { columns: 6 }` keeps the header
-  at half width — pair it with `breakout: true` for full-width revealed content.
+- **`minimalistic-area-card-extender`**: first attempt at the grid fix (returning
+  the config from `getGridOptions`), superseded by 0.14.2 which removes the
+  method outright.
 
 ## [0.14.0] - 2026-06-27
 
