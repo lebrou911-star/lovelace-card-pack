@@ -9,6 +9,7 @@
 
 import "./expander-card/expander-card.js";
 import "./minimalistic-area-card-plus/minimalistic-area-card-plus.js";
+import "./popup-card/popup-card.js";
 
 // __PACK_VERSION__ is replaced at build time (see build.mjs).
 const VERSION = typeof __PACK_VERSION__ !== "undefined" ? __PACK_VERSION__ : "dev";

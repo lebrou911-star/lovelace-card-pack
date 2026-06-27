@@ -3,6 +3,20 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.6.0] - 2026-06-27
+
+### Added
+- **`popup-card`** (`custom:cardpack-popup`, 0.1.0): a standalone, hash-triggered
+  popup that replicates Bubble Card's pop-up model. The popup is its own card,
+  placed anywhere in the dashboard, and opens when the URL hash matches its
+  `hash` (e.g. `#salon`) — any element can open it with `tap_action: navigate`
+  to that hash. The browser Back button, a click on the backdrop, or Escape
+  closes it (open pushes a history entry so Back pops it cleanly). When closed
+  it takes no layout space (an optional trigger chip can be shown). Its content
+  is a **single normal card** (`card:`), edited exactly like any other card via
+  HA's native `hui-card-element-editor`; use a `vertical-stack`/`grid` as that
+  card for several children. The existing `expander-card` is left untouched.
+
 ## [0.5.3] - 2026-06-27
 
 ### Changed
