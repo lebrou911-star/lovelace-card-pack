@@ -3,6 +3,16 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.1] - 2026-06-27
+
+### Fixed
+- **`expander-child`** (expander-pair 0.4.1): re-tapping the trigger now toggles
+  cleanly — tap to open, re-tap to collapse, tap again to reopen (like the
+  original expander). Navigation events to the hash are debounced (250 ms) so a
+  single tap's burst of `location-changed` + `hashchange` counts as one toggle
+  (no flicker), and collapsing clears the hash from the URL without leaving
+  stray history entries.
+
 ## [0.9.0] - 2026-06-27
 
 ### Changed

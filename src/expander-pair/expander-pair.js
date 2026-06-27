@@ -17,7 +17,7 @@
  *
  * License: MIT
  */
-const VERSION = "0.4.0";
+const VERSION = "0.4.1";
 
 const MDI_CHEVRON_RIGHT = "M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z";
 const MDI_CHEVRON_UP = "M7.41,15.41L12,10.83L16.59,15.41L18,14L12,8L6,14L7.41,15.41Z";
@@ -127,7 +127,7 @@ class ExpanderChild extends HTMLElement {
     this._open = false;
     this._contentEl = null;
     this._built = false;
-    this._onLocationChange = () => this._sync();
+    this._onNav = () => this._handleNav();
     this._onKeyDown = (ev) => {
       if (ev.key === "Escape" && this._open) {
         ev.stopPropagation();
@@ -153,7 +153,7 @@ class ExpanderChild extends HTMLElement {
     this._built = false;
     this._build();
     this._buildContent();
-    this._sync();
+    this._setOpen(this._isHashActive());
   }
 
   set hass(hass) {
@@ -162,17 +162,20 @@ class ExpanderChild extends HTMLElement {
   }
 
   connectedCallback() {
-    window.addEventListener("location-changed", this._onLocationChange);
-    window.addEventListener("popstate", this._onLocationChange);
-    window.addEventListener("hashchange", this._onLocationChange);
+    window.addEventListener("location-changed", this._onNav);
+    window.addEventListener("popstate", this._onNav);
+    window.addEventListener("hashchange", this._onNav);
     document.addEventListener("keydown", this._onKeyDown);
-    this._sync();
+    // Debounce window so HA's initial location events right after mount don't
+    // count as a "re-tap" and toggle us shut on load.
+    this._navTs = Date.now();
+    this._setOpen(this._isHashActive());
   }
 
   disconnectedCallback() {
-    window.removeEventListener("location-changed", this._onLocationChange);
-    window.removeEventListener("popstate", this._onLocationChange);
-    window.removeEventListener("hashchange", this._onLocationChange);
+    window.removeEventListener("location-changed", this._onNav);
+    window.removeEventListener("popstate", this._onNav);
+    window.removeEventListener("hashchange", this._onNav);
     document.removeEventListener("keydown", this._onKeyDown);
   }
 
@@ -270,19 +273,40 @@ class ExpanderChild extends HTMLElement {
 
   open() {
     openHash(this._hash);
-    this._sync();
   }
 
-  close() {
-    if (this._isHashActive()) {
-      window.history.back();
-    } else {
+  // Toggle on navigation to our hash; collapse on navigation away. A short
+  // debounce absorbs the burst of location-changed + hashchange that a single
+  // navigation fires, so one tap = one toggle (no flicker).
+  _handleNav() {
+    if (!this._isHashActive()) {
       this._setOpen(false);
+      return;
+    }
+    const now = Date.now();
+    if (now - (this._navTs || 0) < 250) return;
+    this._navTs = now;
+    if (this._open) {
+      this._setOpen(false);
+      this._clearHash();
+    } else {
+      this._setOpen(true);
     }
   }
 
-  _sync() {
-    this._setOpen(this._isHashActive());
+  // Drop our hash from the URL without adding a history entry or firing events.
+  _clearHash() {
+    if (!this._isHashActive()) return;
+    window.history.replaceState(
+      window.history.state,
+      "",
+      window.location.pathname + window.location.search
+    );
+  }
+
+  close() {
+    this._setOpen(false);
+    this._clearHash();
   }
 
   _setOpen(open) {
