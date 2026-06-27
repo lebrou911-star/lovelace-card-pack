@@ -3,6 +3,23 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.5.1] - 2026-06-20
+
+### Fixed
+- `expander-card` editor: editing the child cards no longer reset
+  `child-layout: grid` back to `vertical`. The stack-editor handler now only
+  syncs the layout from the stack type when it's currently `vertical`/
+  `horizontal`, and preserves any other value (e.g. `grid`).
+
+### Changed
+- `expander-card` (0.21.0) editor: the fallback "Child cards" list (used when
+  HA's `hui-stack-card-editor` isn't available) is now lazy — a collapsed list
+  with a light "Content hidden for performance reasons" placeholder per card,
+  and the real editor mounts only for the card you open (one at a time, via the
+  pencil button). Add / move / delete and the card picker are unchanged. The
+  primary `hui-stack-card-editor` path is untouched, and the runtime card
+  rendering (incl. the `grid` layout) is unaffected.
+
 ## [0.5.0] - 2026-06-20
 
 ### Added
@@ -242,6 +259,7 @@ one shot via HACS.
   - alignment controls for the bottom sensor row so text-valued states
     (e.g. `idle`) stay aligned with numeric ones.
 
+[0.5.1]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.5.1
 [0.5.0]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.5.0
 [0.4.2]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.4.2
 [0.4.1]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.4.1
