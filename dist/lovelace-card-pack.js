@@ -1,4 +1,4 @@
-/*! lovelace-card-pack v0.14.0 | https://github.com/lebrou911-star/lovelace-card-pack */
+/*! lovelace-card-pack v0.14.1 | https://github.com/lebrou911-star/lovelace-card-pack */
 (() => {
   var __defProp = Object.defineProperty;
   var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
@@ -1563,7 +1563,7 @@
   };
 
   // src/minimalistic-area-card-plus/minimalistic-area-card-plus.js
-  var VERSION2 = true ? "0.14.0" : "dev";
+  var VERSION2 = true ? "0.14.1" : "dev";
   var CARD_TYPE = "minimalistic-area-card-plus";
   var EDITOR_TYPE = "minimalistic-area-card-plus-editor";
   var UNAVAILABLE = "unavailable";
@@ -2404,7 +2404,7 @@
   );
 
   // src/minimalistic-area-card-extender/minimalistic-area-card-extender.js
-  var VERSION3 = true ? "0.14.0" : "dev";
+  var VERSION3 = true ? "0.14.1" : "dev";
   var CARD_TYPE2 = "minimalistic-area-card-extender";
   var EDITOR_TYPE2 = "minimalistic-area-card-extender-editor";
   var HEADER_EL = "minimalistic-area-card-plus";
@@ -2509,7 +2509,10 @@
       return this._el && typeof this._el.getCardSize === "function" ? this._el.getCardSize() : 3;
     }
     getGridOptions() {
-      return this._el && typeof this._el.getGridOptions === "function" ? this._el.getGridOptions() : void 0;
+      const fromCfg = this._config && this._config.grid_options;
+      const fromInner = this._el && typeof this._el.getGridOptions === "function" ? this._el.getGridOptions() : void 0;
+      if (fromCfg && fromInner) return { ...fromInner, ...fromCfg };
+      return fromCfg || fromInner || void 0;
     }
   };
   if (!customElements.get(CARD_TYPE2)) {
@@ -3171,7 +3174,7 @@
   );
 
   // src/index.js
-  var VERSION5 = true ? "0.14.0" : "dev";
+  var VERSION5 = true ? "0.14.1" : "dev";
   console.info(
     `%c LOVELACE-CARD-PACK %c v${VERSION5} `,
     "color: white; background: #6d28d9; font-weight: 700; border-radius: 3px 0 0 3px;",

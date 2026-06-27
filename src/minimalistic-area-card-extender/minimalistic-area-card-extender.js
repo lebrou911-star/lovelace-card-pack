@@ -146,9 +146,15 @@ class MinimalisticAreaCardExtender extends HTMLElement {
   }
 
   getGridOptions() {
-    return this._el && typeof this._el.getGridOptions === "function"
-      ? this._el.getGridOptions()
-      : undefined;
+    // Honour the user's grid_options first (otherwise returning undefined here
+    // makes HA's sections view ignore `columns` and force full width).
+    const fromCfg = this._config && this._config.grid_options;
+    const fromInner =
+      this._el && typeof this._el.getGridOptions === "function"
+        ? this._el.getGridOptions()
+        : undefined;
+    if (fromCfg && fromInner) return { ...fromInner, ...fromCfg };
+    return fromCfg || fromInner || undefined;
   }
 }
 
