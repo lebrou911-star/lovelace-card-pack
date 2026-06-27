@@ -145,14 +145,9 @@ class MinimalisticAreaCardExtender extends HTMLElement {
     return this._el && typeof this._el.getCardSize === "function" ? this._el.getCardSize() : 3;
   }
 
-  // Declare grid support so HA's Sections view shows the "Layout" tab and lets
-  // the card be resized. Must include min/max constraints (an incomplete object
-  // or `undefined` makes HA hide Layout / force full width). The user's own
-  // `grid_options` is spread last so its `columns` wins.
-  getGridOptions() {
-    const cfg = (this._config && this._config.grid_options) || {};
-    return { columns: 12, rows: "auto", min_columns: 1, max_columns: 12, min_rows: 1, ...cfg };
-  }
+  // No getGridOptions() — identical to expander-card. In a Sections view HA
+  // provides the Layout tab and honours `grid_options.columns` natively; in a
+  // masonry view there are simply no columns (full width), as for any card.
 }
 
 if (!customElements.get(CARD_TYPE)) {

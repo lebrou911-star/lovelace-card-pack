@@ -3,15 +3,21 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.14.4] - 2026-06-27
+
+### Fixed
+- **`minimalistic-area-card-extender`**: reverted the `getGridOptions()` churn —
+  the card has none again, exactly like `expander-card`. The missing "Layout"
+  tab / full-width header was never a card bug: the **Layout tab and `columns`
+  only exist in **Sections** views**, and the demo was a masonry view. In a
+  Sections view the extender gets the Layout tab and honours `grid_options.columns`
+  natively (header at chosen width, `breakout: true` for full-width content).
+
 ## [0.14.3] - 2026-06-27
 
 ### Fixed
-- **`minimalistic-area-card-extender`**: implement `getGridOptions()` **with full
-  constraints** (`columns/rows/min_columns/max_columns/min_rows`, user
-  `grid_options` spread last). This makes HA's Sections view show the **Layout**
-  tab in the card editor (it was missing) and honour `columns` — earlier tries
-  (undefined, or an incomplete `{columns}`) made HA hide Layout and force full
-  width.
+- (Superseded by 0.14.4.) Attempted a full `getGridOptions()`; the real issue was
+  the demo view type (masonry vs sections), not the card.
 
 ## [0.14.2] - 2026-06-27
 
