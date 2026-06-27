@@ -3,19 +3,26 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
-## [0.6.0] - 2026-06-27
+## [0.7.0] - 2026-06-27
 
 ### Added
-- **`popup-card`** (`custom:cardpack-popup`, 0.1.0): a standalone, hash-triggered
-  popup that replicates Bubble Card's pop-up model. The popup is its own card,
-  placed anywhere in the dashboard, and opens when the URL hash matches its
-  `hash` (e.g. `#salon`) — any element can open it with `tap_action: navigate`
-  to that hash. The browser Back button, a click on the backdrop, or Escape
-  closes it (open pushes a history entry so Back pops it cleanly). When closed
-  it takes no layout space (an optional trigger chip can be shown). Its content
-  is a **single normal card** (`card:`), edited exactly like any other card via
-  HA's native `hui-card-element-editor`; use a `vertical-stack`/`grid` as that
-  card for several children. The existing `expander-card` is left untouched.
+- **Expander pair** (`expander-pair` 0.2.0) — two separate cards that together
+  behave like a Bubble Card pop-up, kept apart on purpose to avoid confusion:
+  - **`custom:expander-header`** — the always-visible button. Tapping it opens
+    the popup by navigating to a URL hash (e.g. `#garage`).
+  - **`custom:expander-child`** — the popup content. Hidden (takes no layout
+    space; an editor placeholder can be toggled) until the URL hash matches its
+    `hash`; then it slides up as a dialog. Its content is a **single normal
+    card** (`card:`), edited exactly like any other card; use a
+    `vertical-stack`/`grid` for several children.
+
+  Link the two by giving them the same `hash`. The browser Back button, a click
+  on the backdrop, or Escape closes the child. The existing `expander-card` is
+  left untouched.
+
+### Removed
+- The short-lived `custom:cardpack-popup` (0.6.0) is replaced by the
+  header/child pair above.
 
 ## [0.5.3] - 2026-06-27
 
