@@ -9,6 +9,7 @@
 
 import "./expander-card/expander-card.js";
 import "./minimalistic-area-card-plus/minimalistic-area-card-plus.js";
+import "./minimalistic-area-card-extender/minimalistic-area-card-extender.js";
 import "./expander-pair/expander-pair.js";
 
 // __PACK_VERSION__ is replaced at build time (see build.mjs).

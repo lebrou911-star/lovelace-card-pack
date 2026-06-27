@@ -3,6 +3,21 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.12.0] - 2026-06-27
+
+### Added
+- **`minimalistic-area-card-extender`** (`custom:minimalistic-area-card-extender`):
+  a self-contained card that is a `minimalistic-area-card-plus` **plus** an
+  inline expander. The visible part keeps every minimalistic option (image,
+  entities, templates, badges, icon sizes, `active_border`, …); underneath it
+  reveals child cards inline like `expander-card`, with all its options
+  (`child-layout` incl. `grid`, `gap`, `expanded`, `expand-on`, `group`,
+  `border-color`, …). Internally it builds an `expander-card` whose header is a
+  minimalistic card, so behaviour is the existing tested code — no duplication.
+  Its editor reuses the minimalistic editor for the visuals, adds the expander
+  options, and edits the revealed `cards` like a stack. `minimalistic-area-card-plus`
+  stays available unchanged for normal (non-expanding) use.
+
 ## [0.11.0] - 2026-06-27
 
 ### Added

@@ -1,4 +1,4 @@
-/*! lovelace-card-pack v0.11.0 | https://github.com/lebrou911-star/lovelace-card-pack */
+/*! lovelace-card-pack v0.12.0 | https://github.com/lebrou911-star/lovelace-card-pack */
 (() => {
   var __defProp = Object.defineProperty;
   var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
@@ -1563,7 +1563,7 @@
   };
 
   // src/minimalistic-area-card-plus/minimalistic-area-card-plus.js
-  var VERSION2 = true ? "0.11.0" : "dev";
+  var VERSION2 = true ? "0.12.0" : "dev";
   var CARD_TYPE = "minimalistic-area-card-plus";
   var EDITOR_TYPE = "minimalistic-area-card-plus-editor";
   var UNAVAILABLE = "unavailable";
@@ -2403,8 +2403,338 @@
     "color: #ea580c; background: white; font-weight: 700;"
   );
 
+  // src/minimalistic-area-card-extender/minimalistic-area-card-extender.js
+  var VERSION3 = true ? "0.12.0" : "dev";
+  var CARD_TYPE2 = "minimalistic-area-card-extender";
+  var EDITOR_TYPE2 = "minimalistic-area-card-extender-editor";
+  var HEADER_TYPE = "custom:minimalistic-area-card-plus";
+  var EXPANDER_KEYS = /* @__PURE__ */ new Set([
+    "cards",
+    "child-layout",
+    "gap",
+    "expanded",
+    "columns",
+    "header-width",
+    "breakout",
+    "breakout-margin",
+    "breakout-max",
+    "group",
+    "border-color",
+    "drop",
+    "expand-on"
+  ]);
+  function splitConfig(config) {
+    const header = {};
+    const exp = {};
+    for (const k in config) {
+      if (k === "type") continue;
+      if (EXPANDER_KEYS.has(k)) exp[k] = config[k];
+      else header[k] = config[k];
+    }
+    header.type = HEADER_TYPE;
+    return {
+      type: "custom:expander-card",
+      "expand-on": "header",
+      ...exp,
+      header,
+      cards: Array.isArray(config.cards) ? config.cards : []
+    };
+  }
+  var MinimalisticAreaCardExtender = class extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({ mode: "open" });
+    }
+    static getConfigElement() {
+      return document.createElement(EDITOR_TYPE2);
+    }
+    static getStubConfig(hass) {
+      const firstArea = hass && hass.areas ? hass.areas[Object.keys(hass.areas)[0]] : void 0;
+      const config = {
+        type: `custom:${CARD_TYPE2}`,
+        title: firstArea ? firstArea.name : "Living Room",
+        entities: [],
+        cards: [],
+        "child-layout": "vertical"
+      };
+      if (firstArea) config.area = firstArea.area_id;
+      return config;
+    }
+    setConfig(config) {
+      if (!config) throw new Error("Invalid configuration");
+      this._config = config;
+      this._inner = splitConfig(config);
+      this._mount();
+    }
+    set hass(hass) {
+      this._hass = hass;
+      if (this._el) this._el.hass = hass;
+    }
+    async _mount() {
+      if (this._el) {
+        this._el.setConfig(this._inner);
+        if (this._hass) this._el.hass = this._hass;
+        return;
+      }
+      if (this._mounting) {
+        this._pending = true;
+        return;
+      }
+      this._mounting = true;
+      const helpers = await window.loadCardHelpers();
+      this._el = helpers.createCardElement(this._inner);
+      if (this._hass) this._el.hass = this._hass;
+      this.shadowRoot.appendChild(this._el);
+      this._mounting = false;
+      if (this._pending) {
+        this._pending = false;
+        this._el.setConfig(this._inner);
+        if (this._hass) this._el.hass = this._hass;
+      }
+    }
+    getCardSize() {
+      return this._el && typeof this._el.getCardSize === "function" ? this._el.getCardSize() : 3;
+    }
+    getGridOptions() {
+      return this._el && typeof this._el.getGridOptions === "function" ? this._el.getGridOptions() : void 0;
+    }
+  };
+  if (!customElements.get(CARD_TYPE2)) {
+    customElements.define(CARD_TYPE2, MinimalisticAreaCardExtender);
+  }
+  var EXP_SCHEMA = [
+    {
+      type: "grid",
+      schema: [
+        {
+          name: "child-layout",
+          selector: {
+            select: {
+              mode: "dropdown",
+              options: [
+                { value: "vertical", label: "Vertical" },
+                { value: "horizontal", label: "Horizontal" },
+                { value: "grid", label: "Grid (12-col, like HA sections)" }
+              ]
+            }
+          }
+        },
+        { name: "gap", selector: { number: { min: 0, max: 48, mode: "box", unit_of_measurement: "px" } } }
+      ]
+    },
+    {
+      type: "grid",
+      schema: [
+        {
+          name: "expand-on",
+          selector: {
+            select: {
+              mode: "dropdown",
+              options: [
+                { value: "header", label: "Tap the card" },
+                { value: "chevron", label: "Chevron only" },
+                { value: "both", label: "Card + chevron" }
+              ]
+            }
+          }
+        },
+        { name: "expanded", selector: { boolean: {} } }
+      ]
+    }
+  ];
+  var EXP_LABELS = {
+    "child-layout": "Child layout",
+    gap: "Gap between children",
+    "expand-on": "Expand on",
+    expanded: "Expanded by default"
+  };
+  var MinimalisticAreaCardExtenderEditor = class extends HTMLElement {
+    setConfig(config) {
+      this._config = { "child-layout": "vertical", gap: 8, "expand-on": "header", ...config };
+      this._render();
+      this._ensureNativeEditors();
+    }
+    set hass(hass) {
+      this._hass = hass;
+      if (this._visualEd) this._visualEd.hass = hass;
+      if (this._expForm) this._expForm.hass = hass;
+      if (this._cardEd && "hass" in this._cardEd) this._cardEd.hass = hass;
+    }
+    set lovelace(lovelace) {
+      this._lovelace = lovelace;
+      if (this._cardEd && "lovelace" in this._cardEd) this._cardEd.lovelace = lovelace;
+    }
+    get _hasNativeEditor() {
+      return !!customElements.get("hui-card-element-editor");
+    }
+    async _ensureNativeEditors() {
+      const need = ["hui-card-element-editor", "hui-card-picker"];
+      if (need.every((n) => customElements.get(n))) return;
+      try {
+        const helpers = await window.loadCardHelpers();
+        const stack = helpers.createCardElement({ type: "vertical-stack", cards: [] });
+        const ctor = stack && stack.constructor;
+        if (ctor && ctor.getConfigElement) await ctor.getConfigElement();
+      } catch (e) {
+      }
+      await Promise.race([
+        Promise.all(need.map((n) => customElements.whenDefined(n))),
+        new Promise((r) => setTimeout(r, 2e3))
+      ]);
+      if (this._hasNativeEditor && !this._upgraded) {
+        this._upgraded = true;
+        this._rendered = false;
+        this._render();
+      }
+    }
+    _emit() {
+      this.dispatchEvent(
+        new CustomEvent("config-changed", {
+          detail: { config: this._config },
+          bubbles: true,
+          composed: true
+        })
+      );
+    }
+    _headerSubset() {
+      const out = { type: HEADER_TYPE };
+      for (const k in this._config) {
+        if (k === "type" || EXPANDER_KEYS.has(k)) continue;
+        out[k] = this._config[k];
+      }
+      return out;
+    }
+    _expData() {
+      return {
+        "child-layout": this._config["child-layout"] || "vertical",
+        gap: Number(this._config.gap) || 0,
+        "expand-on": this._config["expand-on"] || "header",
+        expanded: !!this._config.expanded
+      };
+    }
+    _section(title, description) {
+      const el = document.createElement("div");
+      const t = document.createElement("div");
+      t.textContent = title;
+      t.style.fontWeight = "600";
+      t.style.margin = "4px 0";
+      const d = document.createElement("div");
+      d.textContent = description;
+      d.style.fontSize = "0.85em";
+      d.style.color = "var(--secondary-text-color)";
+      d.style.marginBottom = "8px";
+      el.appendChild(t);
+      el.appendChild(d);
+      return el;
+    }
+    _render() {
+      if (!this._config) return;
+      if (this._rendered) {
+        if (this._visualEd) this._visualEd.setConfig(this._headerSubset());
+        if (this._expForm) this._expForm.data = this._expData();
+        return;
+      }
+      this.innerHTML = "";
+      const root = document.createElement("div");
+      root.style.display = "flex";
+      root.style.flexDirection = "column";
+      root.style.gap = "16px";
+      const visual = document.createElement("minimalistic-area-card-plus-editor");
+      visual.hass = this._hass;
+      visual.setConfig(this._headerSubset());
+      visual.addEventListener("config-changed", (ev) => {
+        ev.stopPropagation();
+        const v = { ...ev.detail.config };
+        delete v.type;
+        const keep = {};
+        for (const k in this._config) {
+          if (EXPANDER_KEYS.has(k)) keep[k] = this._config[k];
+        }
+        this._config = { ...v, ...keep };
+        this._emit();
+      });
+      this._visualEd = visual;
+      root.appendChild(visual);
+      root.appendChild(this._section("Expander", "How the revealed cards behave."));
+      const form = document.createElement("ha-form");
+      form.hass = this._hass;
+      form.data = this._expData();
+      form.schema = EXP_SCHEMA;
+      form.computeLabel = (s) => EXP_LABELS[s.name] || s.name;
+      form.addEventListener("value-changed", (ev) => {
+        ev.stopPropagation();
+        this._config = { ...this._config, ...ev.detail.value };
+        this._emit();
+      });
+      this._expForm = form;
+      root.appendChild(form);
+      root.appendChild(
+        this._section("Content (revealed)", "Edited like a stack — add cards, edit one at a time.")
+      );
+      this._cardContainer = document.createElement("div");
+      root.appendChild(this._cardContainer);
+      this._renderCardEditor();
+      this.appendChild(root);
+      this._rendered = true;
+    }
+    _renderCardEditor() {
+      const c = this._cardContainer;
+      c.innerHTML = "";
+      const cards = Array.isArray(this._config.cards) ? this._config.cards : [];
+      if (this._hasNativeEditor) {
+        const ed = document.createElement("hui-card-element-editor");
+        ed.hass = this._hass;
+        ed.lovelace = this._lovelace;
+        ed.value = { type: "vertical-stack", cards };
+        ed.addEventListener("config-changed", (ev) => {
+          ev.stopPropagation();
+          const v = ev.detail.config || {};
+          this._config = { ...this._config, cards: Array.isArray(v.cards) ? v.cards : [] };
+          this._emit();
+        });
+        this._cardEd = ed;
+        c.appendChild(ed);
+        return;
+      }
+      const ta = document.createElement("textarea");
+      ta.value = JSON.stringify(cards, null, 2);
+      ta.style.width = "100%";
+      ta.style.minHeight = "140px";
+      ta.style.fontFamily = "var(--code-font-family, monospace)";
+      ta.style.boxSizing = "border-box";
+      ta.addEventListener("input", () => {
+        try {
+          const v = JSON.parse(ta.value);
+          this._config = { ...this._config, cards: Array.isArray(v) ? v : [] };
+          this._emit();
+        } catch (e) {
+        }
+      });
+      this._cardEd = ta;
+      c.appendChild(ta);
+    }
+  };
+  if (!customElements.get(EDITOR_TYPE2)) {
+    customElements.define(EDITOR_TYPE2, MinimalisticAreaCardExtenderEditor);
+  }
+  window.customCards = window.customCards || [];
+  if (!window.customCards.some((c) => c.type === CARD_TYPE2)) {
+    window.customCards.push({
+      type: CARD_TYPE2,
+      name: "Minimalistic Area Card Extender",
+      description: "A minimalistic-area-card-plus that expands inline to reveal child cards (all the expander options, in one card).",
+      preview: false,
+      documentationURL: "https://github.com/lebrou911-star/lovelace-card-pack"
+    });
+  }
+  console.info(
+    `%c MINIMALISTIC-AREA-CARD-EXTENDER %c v${VERSION3} `,
+    "color: white; background: #ff9800; font-weight: 700; border-radius: 3px 0 0 3px;",
+    "color: #ff9800; background: white; font-weight: 700; border-radius: 0 3px 3px 0;"
+  );
+
   // src/expander-pair/expander-pair.js
-  var VERSION3 = "0.5.0";
+  var VERSION4 = "0.5.0";
   var MDI_CHEVRON_UP = "M7.41,15.41L12,10.83L16.59,15.41L18,14L12,8L6,14L7.41,15.41Z";
   function normHash(v) {
     if (!v) return "";
@@ -2794,15 +3124,15 @@
     });
   }
   console.info(
-    `%c expander-pair %c v${VERSION3} `,
+    `%c expander-pair %c v${VERSION4} `,
     "color:#fff;background:#506eac;border-radius:3px 0 0 3px",
     "color:#506eac;background:#fff;border-radius:0 3px 3px 0"
   );
 
   // src/index.js
-  var VERSION4 = true ? "0.11.0" : "dev";
+  var VERSION5 = true ? "0.12.0" : "dev";
   console.info(
-    `%c LOVELACE-CARD-PACK %c v${VERSION4} `,
+    `%c LOVELACE-CARD-PACK %c v${VERSION5} `,
     "color: white; background: #6d28d9; font-weight: 700; border-radius: 3px 0 0 3px;",
     "color: #6d28d9; background: white; font-weight: 700; border-radius: 0 3px 3px 0;"
   );
