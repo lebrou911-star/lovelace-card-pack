@@ -3,6 +3,15 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.13.1] - 2026-06-27
+
+### Fixed
+- **`expander-child`** (expander-pair 0.6.0): the collapsed placeholder marker is
+  now shown **only while editing** the dashboard (URL `?edit=1`) — it is fully
+  invisible in normal/deployed view (previously the dashed marker showed even
+  when not expanded). `getCardSize` returns 0 while collapsed so it reserves no
+  space.
+
 ## [0.13.0] - 2026-06-27
 
 ### Changed

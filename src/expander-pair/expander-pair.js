@@ -16,7 +16,7 @@
  *
  * License: MIT
  */
-const VERSION = "0.5.0";
+const VERSION = "0.6.0";
 
 const MDI_CHEVRON_UP = "M7.41,15.41L12,10.83L16.59,15.41L18,14L12,8L6,14L7.41,15.41Z";
 
@@ -54,7 +54,10 @@ class ExpanderChild extends HTMLElement {
     this._open = false;
     this._contentEl = null;
     this._built = false;
-    this._onNav = () => this._handleNav();
+    this._onNav = () => {
+      this._handleNav();
+      this._updatePlaceholder();
+    };
     this._onKeyDown = (ev) => {
       if (ev.key === "Escape" && this._open) {
         ev.stopPropagation();
@@ -97,6 +100,7 @@ class ExpanderChild extends HTMLElement {
     // count as a "re-tap" and toggle us shut on load.
     this._navTs = Date.now();
     this._setOpen(this._isHashActive());
+    this._updatePlaceholder();
   }
 
   disconnectedCallback() {
@@ -108,17 +112,15 @@ class ExpanderChild extends HTMLElement {
 
   _build() {
     if (this._built) return;
-    // `placeholder` (default true) shows a faint inline marker when collapsed so
-    // the card stays selectable in the dashboard editor. Set it false to leave
-    // no trace at all until opened.
-    const showPlaceholder = this._config.placeholder !== false;
     const hideHeader = this._config.show_header === false;
 
     this.shadowRoot.innerHTML = `
       <style>
         :host { display: block; }
+        /* The collapsed marker is only shown while editing the dashboard (see
+           _updatePlaceholder) — never in normal/deployed view. */
         .placeholder {
-          display: ${showPlaceholder ? "flex" : "none"};
+          display: none;
           align-items: center; gap: 8px;
           padding: 8px 12px;
           border: 1px dashed var(--divider-color, #9e9e9e);
@@ -126,7 +128,6 @@ class ExpanderChild extends HTMLElement {
           color: var(--secondary-text-color);
           font-size: 0.85rem;
         }
-        :host([data-open]) .placeholder { display: none; }
 
         /* Inline accordion: animate height via grid-template-rows 0fr -> 1fr,
            so opening pushes the cards below it down (no overlay). */
@@ -162,11 +163,26 @@ class ExpanderChild extends HTMLElement {
     `;
 
     this._bodyEl = this.shadowRoot.querySelector(".body");
+    this._placeholderEl = this.shadowRoot.querySelector(".placeholder");
     const chev = this.shadowRoot.querySelector(".chev");
     if (chev) chev.path = MDI_CHEVRON_UP;
     const closebar = this.shadowRoot.querySelector(".closebar");
     if (closebar) closebar.addEventListener("click", () => this.close());
     this._built = true;
+    this._updatePlaceholder();
+  }
+
+  // Storage dashboards add `?edit=1` to the URL while in edit mode.
+  _isEditMode() {
+    return /[?&]edit=1\b/.test(window.location.search);
+  }
+
+  // Show the dashed marker only while editing (so the card is selectable) and
+  // only when collapsed — never in normal view.
+  _updatePlaceholder() {
+    if (!this._placeholderEl) return;
+    const show = this._config.placeholder !== false && !this._open && this._isEditMode();
+    this._placeholderEl.style.display = show ? "flex" : "none";
   }
 
   async _buildContent() {
@@ -241,10 +257,12 @@ class ExpanderChild extends HTMLElement {
     this._open = open;
     if (open) this.setAttribute("data-open", "");
     else this.removeAttribute("data-open");
+    this._updatePlaceholder();
   }
 
   getCardSize() {
-    return this._config && this._config.placeholder !== false ? 1 : 0;
+    // Collapsed: takes essentially no space. Open: let the content speak.
+    return this._open ? 3 : 0;
   }
 }
 
@@ -266,7 +284,7 @@ const CHILD_LABELS = {
   hash: "Hash that reveals it (e.g. #garage) — must match the trigger",
   title: "Title (shown on the collapse bar)",
   show_header: "Show the collapse bar (title + ▲ to close)",
-  placeholder: "Show a placeholder when collapsed (easier to edit)",
+  placeholder: "Show a selectable marker while editing (hidden in normal view)",
 };
 
 class ExpanderChildEditor extends HTMLElement {
