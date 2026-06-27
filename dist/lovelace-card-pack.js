@@ -1,11 +1,11 @@
-/*! lovelace-card-pack v0.16.1 | https://github.com/lebrou911-star/lovelace-card-pack */
+/*! lovelace-card-pack v0.16.2 | https://github.com/lebrou911-star/lovelace-card-pack */
 (() => {
   var __defProp = Object.defineProperty;
   var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
   var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
 
   // src/expander-card/expander-card.js
-  var VERSION = "0.24.0";
+  var VERSION = "0.24.1";
   function resolveHeaderWidth(v) {
     if (v == null || v === "" || v === 0 || v === "0") return null;
     if (typeof v === "number") {
@@ -54,7 +54,8 @@
         ...config
       };
       if (!Array.isArray(this._config.cards)) this._config.cards = [];
-      this._expanded = !!this._config.expanded;
+      this._expanded = !!this._config.expanded && !this._isEditMode();
+      this._wasEdit = this._isEditMode();
       this._built = false;
       if (this.shadowRoot) this._build();
     }
@@ -376,9 +377,10 @@
     _isEditMode() {
       return /[?&]edit=1\b/.test(window.location.search);
     }
-    // Logical expanded state, minus edit mode.
+    // Visual open state == logical expanded. (Edit mode no longer forces collapse;
+    // it only resets to collapsed once on entering, see _onEditModeChange.)
     _visualOpen() {
-      return this._expanded && !this._isEditMode();
+      return this._expanded;
     }
     _applyVisual() {
       const open = this._visualOpen();
@@ -406,7 +408,12 @@
       if (!this._built && this._config) this._build();
       window.addEventListener("resize", this._onResize);
       window.addEventListener("expander-card:opened", this._onGroupOpen);
-      if (!this._onEditModeChange) this._onEditModeChange = () => this._applyVisual();
+      if (!this._onEditModeChange)
+        this._onEditModeChange = () => {
+          const isEdit = this._isEditMode();
+          if (isEdit && !this._wasEdit && this._expanded) this._setExpanded(false);
+          this._wasEdit = isEdit;
+        };
       window.addEventListener("location-changed", this._onEditModeChange);
       window.addEventListener("popstate", this._onEditModeChange);
       requestAnimationFrame(() => this._applyBreakout());
@@ -1583,7 +1590,7 @@
   };
 
   // src/minimalistic-area-card-plus/minimalistic-area-card-plus.js
-  var VERSION2 = true ? "0.16.1" : "dev";
+  var VERSION2 = true ? "0.16.2" : "dev";
   var CARD_TYPE = "minimalistic-area-card-plus";
   var EDITOR_TYPE = "minimalistic-area-card-plus-editor";
   var UNAVAILABLE = "unavailable";
@@ -2424,7 +2431,7 @@
   );
 
   // src/minimalistic-area-card-extender/minimalistic-area-card-extender.js
-  var VERSION3 = true ? "0.16.1" : "dev";
+  var VERSION3 = true ? "0.16.2" : "dev";
   var CARD_TYPE2 = "minimalistic-area-card-extender";
   var EDITOR_TYPE2 = "minimalistic-area-card-extender-editor";
   var HEADER_EL = "minimalistic-area-card-plus";
@@ -3230,7 +3237,7 @@
   );
 
   // src/index.js
-  var VERSION5 = true ? "0.16.1" : "dev";
+  var VERSION5 = true ? "0.16.2" : "dev";
   console.info(
     `%c LOVELACE-CARD-PACK %c v${VERSION5} `,
     "color: white; background: #6d28d9; font-weight: 700; border-radius: 3px 0 0 3px;",

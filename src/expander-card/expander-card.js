@@ -7,7 +7,7 @@
  *
  * License: MIT
  */
-const VERSION = "0.24.0";
+const VERSION = "0.24.1";
 
 // Resolve a header-width value into a CSS max-width.
 // 1..12 -> fraction of 12 columns; a bare number -> px; a CSS string used as-is.
@@ -62,7 +62,10 @@ class ExpanderCard extends HTMLElement {
       ...config,
     };
     if (!Array.isArray(this._config.cards)) this._config.cards = [];
-    this._expanded = !!this._config.expanded;
+    // Start collapsed while editing the dashboard (default), even if
+    // `expanded: true` — the user can still expand it by hand.
+    this._expanded = !!this._config.expanded && !this._isEditMode();
+    this._wasEdit = this._isEditMode();
     this._built = false;
     if (this.shadowRoot) this._build();
   }
@@ -442,9 +445,10 @@ class ExpanderCard extends HTMLElement {
     return /[?&]edit=1\b/.test(window.location.search);
   }
 
-  // Logical expanded state, minus edit mode.
+  // Visual open state == logical expanded. (Edit mode no longer forces collapse;
+  // it only resets to collapsed once on entering, see _onEditModeChange.)
   _visualOpen() {
-    return this._expanded && !this._isEditMode();
+    return this._expanded;
   }
 
   _applyVisual() {
@@ -477,8 +481,14 @@ class ExpanderCard extends HTMLElement {
     if (!this._built && this._config) this._build();
     window.addEventListener("resize", this._onResize);
     window.addEventListener("expander-card:opened", this._onGroupOpen);
-    // Re-apply collapse when entering/leaving dashboard edit mode (?edit=1).
-    if (!this._onEditModeChange) this._onEditModeChange = () => this._applyVisual();
+    // Collapse once when ENTERING dashboard edit mode (?edit=1), so the edit
+    // view is compact by default — but leave it expandable by hand.
+    if (!this._onEditModeChange)
+      this._onEditModeChange = () => {
+        const isEdit = this._isEditMode();
+        if (isEdit && !this._wasEdit && this._expanded) this._setExpanded(false);
+        this._wasEdit = isEdit;
+      };
     window.addEventListener("location-changed", this._onEditModeChange);
     window.addEventListener("popstate", this._onEditModeChange);
     requestAnimationFrame(() => this._applyBreakout());

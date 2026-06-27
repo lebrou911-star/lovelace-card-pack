@@ -3,6 +3,14 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.16.2] - 2026-06-27
+
+### Changed
+- **`expander-card`** (0.24.1): edit mode no longer **forces** the card collapsed
+  — it just **collapses once when you enter** edit mode (so the edit view is
+  compact by default), and you can expand it again by hand. Leaving edit mode
+  restores normal behaviour.
+
 ## [0.16.1] - 2026-06-27
 
 ### Changed
