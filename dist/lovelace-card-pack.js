@@ -1,11 +1,11 @@
-/*! lovelace-card-pack v0.4.2 | https://github.com/lebrou911-star/lovelace-card-pack */
+/*! lovelace-card-pack v0.5.0 | https://github.com/lebrou911-star/lovelace-card-pack */
 (() => {
   var __defProp = Object.defineProperty;
   var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
   var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
 
   // src/expander-card/expander-card.js
-  var VERSION = "0.19.0";
+  var VERSION = "0.20.0";
   function resolveHeaderWidth(v) {
     if (v == null || v === "" || v === 0 || v === "0") return null;
     if (typeof v === "number") {
@@ -90,6 +90,23 @@
       const newEl = await this._createCardElement(cardConfig);
       if (oldEl.parentElement) oldEl.parentElement.replaceChild(newEl, oldEl);
       return newEl;
+    }
+    // Place a child in the 12-col native grid using its grid_options.columns
+    // (mirrors how a HA section spans cards). Unknown/zero -> full width.
+    _applyGridSpan(el, childConfig) {
+      let cols = childConfig && childConfig.grid_options ? childConfig.grid_options.columns : void 0;
+      if (cols == null && typeof el.getGridOptions === "function") {
+        try {
+          cols = (el.getGridOptions() || {}).columns;
+        } catch (e) {
+        }
+      }
+      if (cols === "full" || cols == null) {
+        el.style.gridColumn = "1 / -1";
+        return;
+      }
+      const n = parseInt(cols, 10);
+      el.style.gridColumn = Number.isFinite(n) ? `span ${Math.max(1, Math.min(12, n))}` : "1 / -1";
     }
     async _build() {
       if (this._built) return;
@@ -194,10 +211,14 @@
       const children = document.createElement("div");
       children.className = "children" + (this._expanded ? " open" : "");
       const horizontal = this._config["child-layout"] === "horizontal";
+      const nativeGrid = this._config["child-layout"] === "grid";
       const columns = parseInt(this._config.columns, 10) || 0;
       const inner = document.createElement("div");
       inner.className = "children-inner";
-      if (columns >= 1) {
+      if (nativeGrid) {
+        inner.classList.add("grid");
+        inner.style.gridTemplateColumns = "repeat(12, minmax(0, 1fr))";
+      } else if (columns >= 1) {
         inner.classList.add("grid");
         inner.style.gridTemplateColumns = `repeat(${columns}, minmax(0, 1fr))`;
       } else if (horizontal) {
@@ -206,6 +227,7 @@
       this._childEls = [];
       for (const childConfig of this._config.cards) {
         const el = await this._createCardElement(childConfig);
+        if (nativeGrid) this._applyGridSpan(el, childConfig);
         this._childEls.push(el);
         inner.appendChild(el);
       }
@@ -1526,7 +1548,7 @@
   };
 
   // src/minimalistic-area-card-plus/minimalistic-area-card-plus.js
-  var VERSION2 = true ? "0.4.2" : "dev";
+  var VERSION2 = true ? "0.5.0" : "dev";
   var CARD_TYPE = "minimalistic-area-card-plus";
   var EDITOR_TYPE = "minimalistic-area-card-plus-editor";
   var UNAVAILABLE = "unavailable";
@@ -2322,7 +2344,7 @@
   );
 
   // src/index.js
-  var VERSION3 = true ? "0.4.2" : "dev";
+  var VERSION3 = true ? "0.5.0" : "dev";
   console.info(
     `%c LOVELACE-CARD-PACK %c v${VERSION3} `,
     "color: white; background: #6d28d9; font-weight: 700; border-radius: 3px 0 0 3px;",

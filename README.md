@@ -135,7 +135,34 @@ cards:
       - light.hallway
 ```
 
-See the in-card visual editor for all options.
+#### Child layout
+
+`child-layout` controls how the child cards are arranged: `vertical` (default),
+`horizontal`, or `grid`. With **`child-layout: grid`** the children are laid out
+on a native-HA **12-column grid**, each card spanning its own
+`grid_options.columns` — so you can paste a pop-up / HA section's cards straight
+into the expander and get the same layout (e.g. `columns: 3` → quarter width).
+A card with no `grid_options` spans the full width.
+
+```yaml
+type: custom:expander-card
+title: Pool controls
+child-layout: grid
+cards:
+  - type: tile
+    entity: switch.pump
+    grid_options: { columns: 3 }
+  - type: tile
+    entity: climate.pac
+    grid_options: { columns: 3 }
+  - type: tile
+    entity: sensor.water_temp
+    grid_options: { columns: 6 }
+  - type: thermostat        # no grid_options → full width
+    entity: climate.pac
+```
+
+See the in-card visual editor for all other options.
 
 ## ⚠️ Conflicts with separately-installed cards
 

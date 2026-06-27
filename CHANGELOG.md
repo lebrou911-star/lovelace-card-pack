@@ -3,6 +3,18 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.5.0] - 2026-06-20
+
+### Added
+- `expander-card` (0.20.0): new `child-layout: grid` option. Children are laid
+  out on a native-HA **12-column grid**, each card spanning its
+  `grid_options.columns` (a card with no `grid_options` spans full width). Lets
+  you paste a pop-up / HA section's cards into the expander and keep the same
+  layout, without rebuilding widths with nested stacks. Heights
+  (`grid_options.rows`) are intentionally left to content (`grid-auto-rows:
+  auto`). Existing `vertical` / `horizontal` / `columns: N` layouts are
+  unchanged.
+
 ## [0.4.2] - 2026-06-20
 
 ### Changed
@@ -230,6 +242,7 @@ one shot via HACS.
   - alignment controls for the bottom sensor row so text-valued states
     (e.g. `idle`) stay aligned with numeric ones.
 
+[0.5.0]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.5.0
 [0.4.2]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.4.2
 [0.4.1]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.4.1
 [0.4.0]: https://github.com/lebrou911-star/lovelace-card-pack/releases/tag/v0.4.0

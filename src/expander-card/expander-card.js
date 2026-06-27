@@ -7,7 +7,7 @@
  *
  * License: MIT
  */
-const VERSION = "0.19.0";
+const VERSION = "0.20.0";
 
 // Resolve a header-width value into a CSS max-width.
 // 1..12 -> fraction of 12 columns; a bare number -> px; a CSS string used as-is.
@@ -102,6 +102,23 @@ class ExpanderCard extends HTMLElement {
     const newEl = await this._createCardElement(cardConfig);
     if (oldEl.parentElement) oldEl.parentElement.replaceChild(newEl, oldEl);
     return newEl;
+  }
+
+  // Place a child in the 12-col native grid using its grid_options.columns
+  // (mirrors how a HA section spans cards). Unknown/zero -> full width.
+  _applyGridSpan(el, childConfig) {
+    let cols = childConfig && childConfig.grid_options ? childConfig.grid_options.columns : undefined;
+    if (cols == null && typeof el.getGridOptions === "function") {
+      try {
+        cols = (el.getGridOptions() || {}).columns;
+      } catch (e) {}
+    }
+    if (cols === "full" || cols == null) {
+      el.style.gridColumn = "1 / -1";
+      return;
+    }
+    const n = parseInt(cols, 10);
+    el.style.gridColumn = Number.isFinite(n) ? `span ${Math.max(1, Math.min(12, n))}` : "1 / -1";
   }
 
   async _build() {
@@ -230,10 +247,16 @@ class ExpanderCard extends HTMLElement {
     const children = document.createElement("div");
     children.className = "children" + (this._expanded ? " open" : "");
     const horizontal = this._config["child-layout"] === "horizontal";
+    const nativeGrid = this._config["child-layout"] === "grid";
     const columns = parseInt(this._config.columns, 10) || 0;
     const inner = document.createElement("div");
     inner.className = "children-inner";
-    if (columns >= 1) {
+    if (nativeGrid) {
+      // Native HA section layout: a 12-column grid where each child spans its
+      // grid_options.columns (mirrors a HA section / Bubble Card pop-up).
+      inner.classList.add("grid");
+      inner.style.gridTemplateColumns = "repeat(12, minmax(0, 1fr))";
+    } else if (columns >= 1) {
       // Explicit column count wins: arrange children in an N-column grid.
       inner.classList.add("grid");
       inner.style.gridTemplateColumns = `repeat(${columns}, minmax(0, 1fr))`;
@@ -243,6 +266,7 @@ class ExpanderCard extends HTMLElement {
     this._childEls = [];
     for (const childConfig of this._config.cards) {
       const el = await this._createCardElement(childConfig);
+      if (nativeGrid) this._applyGridSpan(el, childConfig);
       this._childEls.push(el);
       inner.appendChild(el);
     }
