@@ -3,6 +3,16 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.8.0] - 2026-06-27
+
+### Changed
+- **`expander-child`** (expander-pair 0.3.0): its content is now edited **exactly
+  like a stack**. The editor mounts HA's native card editor on a
+  `vertical-stack`, so you get the real add / pick-type / edit-one-at-a-time UI
+  with collapsed ("hidden") sub-cards — instead of a single-card editor. Content
+  is stored as `cards: [...]` (a legacy single `card:` is still read and migrated
+  on first edit). Runtime renders the cards inside a vertical-stack.
+
 ## [0.7.0] - 2026-06-27
 
 ### Added

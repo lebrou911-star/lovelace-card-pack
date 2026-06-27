@@ -1,4 +1,4 @@
-/*! lovelace-card-pack v0.7.0 | https://github.com/lebrou911-star/lovelace-card-pack */
+/*! lovelace-card-pack v0.8.0 | https://github.com/lebrou911-star/lovelace-card-pack */
 (() => {
   var __defProp = Object.defineProperty;
   var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
@@ -1561,7 +1561,7 @@
   };
 
   // src/minimalistic-area-card-plus/minimalistic-area-card-plus.js
-  var VERSION2 = true ? "0.7.0" : "dev";
+  var VERSION2 = true ? "0.8.0" : "dev";
   var CARD_TYPE = "minimalistic-area-card-plus";
   var EDITOR_TYPE = "minimalistic-area-card-plus-editor";
   var UNAVAILABLE = "unavailable";
@@ -2357,11 +2357,9 @@
   );
 
   // src/expander-pair/expander-pair.js
-  var VERSION3 = "0.2.0";
+  var VERSION3 = "0.3.0";
   var MDI_CLOSE = "M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z";
   var MDI_CHEVRON_RIGHT = "M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z";
-  var MDI_CODE_BRACES2 = "M8,3A2,2 0 0,0 6,5V9A2,2 0 0,1 4,11H3V13H4A2,2 0 0,1 6,15V19A2,2 0 0,0 8,21H10V19H8V14A2,2 0 0,0 6,12A2,2 0 0,0 8,10V5H10V3M16,3A2,2 0 0,1 18,5V9A2,2 0 0,0 20,11H21V13H20A2,2 0 0,1 18,15V19A2,2 0 0,1 16,21H14V19H16V14A2,2 0 0,1 18,12A2,2 0 0,1 16,10V5H14V3H16Z";
-  var MDI_DELETE2 = "M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z";
   function normHash(v) {
     if (!v) return "";
     const s = String(v).trim();
@@ -2452,7 +2450,7 @@
       return document.createElement("expander-child-editor");
     }
     static getStubConfig() {
-      return { hash: "#popup", title: "My popup", card: { type: "entities", entities: [] } };
+      return { hash: "#popup", title: "My popup", cards: [{ type: "entities", entities: [] }] };
     }
     setConfig(config) {
       if (!config || !config.hash) {
@@ -2547,7 +2545,8 @@
       this._built = true;
     }
     async _buildContent() {
-      const cfg = this._config.card || (Array.isArray(this._config.cards) ? { type: "vertical-stack", cards: this._config.cards } : null);
+      const cards = Array.isArray(this._config.cards) ? this._config.cards : this._config.card ? [this._config.card] : [];
+      const cfg = cards.length ? { type: "vertical-stack", cards } : null;
       if (!this._bodyEl) return;
       this._bodyEl.innerHTML = "";
       this._contentEl = null;
@@ -2789,8 +2788,8 @@
       root.appendChild(form);
       root.appendChild(
         this._section(
-          "Content card",
-          "Edited like a normal card. For several cards, use a vertical-stack here."
+          "Content",
+          "Edited exactly like a stack — add cards, pick a type, edit one at a time."
         )
       );
       this._cardContainer = document.createElement("div");
@@ -2802,73 +2801,29 @@
     _renderCardEditor() {
       const c = this._cardContainer;
       c.innerHTML = "";
-      const card = this._config.card;
-      const hasCard = !!(card && card.type);
-      const bar = document.createElement("div");
-      bar.style.display = "flex";
-      bar.style.justifyContent = "flex-end";
-      bar.style.gap = "4px";
-      bar.appendChild(
-        this._iconButton(
-          MDI_CODE_BRACES2,
-          this._cardYaml ? "Edit in the visual editor" : "Edit in YAML",
-          () => {
-            this._cardYaml = !this._cardYaml;
-            this._renderCardEditor();
-          }
-        )
-      );
-      if (hasCard) {
-        bar.appendChild(
-          this._iconButton(MDI_DELETE2, "Remove content card", () => {
-            this._config = { ...this._config };
-            delete this._config.card;
-            this._emit();
-            this._cardYaml = false;
-            this._renderCardEditor();
-          })
-        );
-      }
-      c.appendChild(bar);
-      if (this._cardYaml) {
-        this._cardEd = this._makeObjectEditor(this._config.card || {}, (v) => {
-          this._config = { ...this._config, card: v };
-          this._emit();
-        });
-        c.appendChild(this._cardEd);
-        return;
-      }
-      if (hasCard && this._hasNativeEditor) {
+      const cards = Array.isArray(this._config.cards) ? this._config.cards : this._config.card ? [this._config.card] : [];
+      if (this._hasNativeEditor) {
         const ed = document.createElement("hui-card-element-editor");
         ed.hass = this._hass;
         ed.lovelace = this._lovelace;
-        ed.value = card;
+        ed.value = { type: "vertical-stack", cards };
         ed.addEventListener("config-changed", (ev) => {
           ev.stopPropagation();
-          this._config = { ...this._config, card: ev.detail.config };
+          const v = ev.detail.config || {};
+          this._config = { ...this._config, cards: Array.isArray(v.cards) ? v.cards : [] };
+          delete this._config.card;
           this._emit();
         });
         this._cardEd = ed;
         c.appendChild(ed);
-      } else if (!hasCard && customElements.get("hui-card-picker")) {
-        const picker = document.createElement("hui-card-picker");
-        picker.hass = this._hass;
-        picker.lovelace = this._lovelace;
-        picker.addEventListener("config-changed", (ev) => {
-          ev.stopPropagation();
-          this._config = { ...this._config, card: ev.detail.config };
-          this._emit();
-          this._renderCardEditor();
-        });
-        this._cardEd = picker;
-        c.appendChild(picker);
-      } else {
-        this._cardEd = this._makeObjectEditor(this._config.card || {}, (v) => {
-          this._config = { ...this._config, card: v };
-          this._emit();
-        });
-        c.appendChild(this._cardEd);
+        return;
       }
+      this._cardEd = this._makeObjectEditor(cards, (v) => {
+        this._config = { ...this._config, cards: Array.isArray(v) ? v : [] };
+        delete this._config.card;
+        this._emit();
+      });
+      c.appendChild(this._cardEd);
     }
   };
   if (!customElements.get("expander-child-editor")) {
@@ -2902,7 +2857,7 @@
   );
 
   // src/index.js
-  var VERSION4 = true ? "0.7.0" : "dev";
+  var VERSION4 = true ? "0.8.0" : "dev";
   console.info(
     `%c LOVELACE-CARD-PACK %c v${VERSION4} `,
     "color: white; background: #6d28d9; font-weight: 700; border-radius: 3px 0 0 3px;",

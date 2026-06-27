@@ -17,7 +17,7 @@
  *
  * License: MIT
  */
-const VERSION = "0.2.0";
+const VERSION = "0.3.0";
 
 const MDI_CLOSE =
   "M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z";
@@ -142,7 +142,7 @@ class ExpanderChild extends HTMLElement {
   }
 
   static getStubConfig() {
-    return { hash: "#popup", title: "My popup", card: { type: "entities", entities: [] } };
+    return { hash: "#popup", title: "My popup", cards: [{ type: "entities", entities: [] }] };
   }
 
   setConfig(config) {
@@ -248,11 +248,12 @@ class ExpanderChild extends HTMLElement {
   }
 
   async _buildContent() {
-    const cfg =
-      this._config.card ||
-      (Array.isArray(this._config.cards)
-        ? { type: "vertical-stack", cards: this._config.cards }
-        : null);
+    const cards = Array.isArray(this._config.cards)
+      ? this._config.cards
+      : this._config.card
+      ? [this._config.card]
+      : [];
+    const cfg = cards.length ? { type: "vertical-stack", cards } : null;
     if (!this._bodyEl) return;
     this._bodyEl.innerHTML = "";
     this._contentEl = null;
@@ -513,8 +514,8 @@ class ExpanderChildEditor extends HTMLElement {
 
     root.appendChild(
       this._section(
-        "Content card",
-        "Edited like a normal card. For several cards, use a vertical-stack here."
+        "Content",
+        "Edited exactly like a stack — add cards, pick a type, edit one at a time."
       )
     );
     this._cardContainer = document.createElement("div");
@@ -527,76 +528,39 @@ class ExpanderChildEditor extends HTMLElement {
   _renderCardEditor() {
     const c = this._cardContainer;
     c.innerHTML = "";
-    const card = this._config.card;
-    const hasCard = !!(card && card.type);
+    const cards = Array.isArray(this._config.cards)
+      ? this._config.cards
+      : this._config.card
+      ? [this._config.card]
+      : [];
 
-    const bar = document.createElement("div");
-    bar.style.display = "flex";
-    bar.style.justifyContent = "flex-end";
-    bar.style.gap = "4px";
-    bar.appendChild(
-      this._iconButton(
-        MDI_CODE_BRACES,
-        this._cardYaml ? "Edit in the visual editor" : "Edit in YAML",
-        () => {
-          this._cardYaml = !this._cardYaml;
-          this._renderCardEditor();
-        }
-      )
-    );
-    if (hasCard) {
-      bar.appendChild(
-        this._iconButton(MDI_DELETE, "Remove content card", () => {
-          this._config = { ...this._config };
-          delete this._config.card;
-          this._emit();
-          this._cardYaml = false;
-          this._renderCardEditor();
-        })
-      );
-    }
-    c.appendChild(bar);
-
-    if (this._cardYaml) {
-      this._cardEd = this._makeObjectEditor(this._config.card || {}, (v) => {
-        this._config = { ...this._config, card: v };
-        this._emit();
-      });
-      c.appendChild(this._cardEd);
-      return;
-    }
-
-    if (hasCard && this._hasNativeEditor) {
+    // Edit the popup content exactly like a stack: HA's native card editor on a
+    // vertical-stack gives the add / pick-type / edit-one-at-a-time UI with the
+    // collapsed ("Content is hidden…") sub-cards — same as editing any stack.
+    if (this._hasNativeEditor) {
       const ed = document.createElement("hui-card-element-editor");
       ed.hass = this._hass;
       ed.lovelace = this._lovelace;
-      ed.value = card;
+      ed.value = { type: "vertical-stack", cards };
       ed.addEventListener("config-changed", (ev) => {
         ev.stopPropagation();
-        this._config = { ...this._config, card: ev.detail.config };
+        const v = ev.detail.config || {};
+        this._config = { ...this._config, cards: Array.isArray(v.cards) ? v.cards : [] };
+        delete this._config.card; // migrate any legacy single-card content
         this._emit();
       });
       this._cardEd = ed;
       c.appendChild(ed);
-    } else if (!hasCard && customElements.get("hui-card-picker")) {
-      const picker = document.createElement("hui-card-picker");
-      picker.hass = this._hass;
-      picker.lovelace = this._lovelace;
-      picker.addEventListener("config-changed", (ev) => {
-        ev.stopPropagation();
-        this._config = { ...this._config, card: ev.detail.config };
-        this._emit();
-        this._renderCardEditor();
-      });
-      this._cardEd = picker;
-      c.appendChild(picker);
-    } else {
-      this._cardEd = this._makeObjectEditor(this._config.card || {}, (v) => {
-        this._config = { ...this._config, card: v };
-        this._emit();
-      });
-      c.appendChild(this._cardEd);
+      return;
     }
+
+    // YAML fallback: edit the cards array directly.
+    this._cardEd = this._makeObjectEditor(cards, (v) => {
+      this._config = { ...this._config, cards: Array.isArray(v) ? v : [] };
+      delete this._config.card;
+      this._emit();
+    });
+    c.appendChild(this._cardEd);
   }
 }
 if (!customElements.get("expander-child-editor")) {
