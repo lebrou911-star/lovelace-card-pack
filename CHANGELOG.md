@@ -3,6 +3,21 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.14.0] - 2026-06-27
+
+### Changed
+- **`minimalistic-area-card-extender`** is now dual-mode, chosen by config:
+  - set **`cards:`** → **self-contained**: the minimalistic card reveals those
+    children **inline right below itself** (wraps `expander-card`; supports
+    `child-layout` incl. `grid`, `gap`, `expanded`, `expand-on`, `group`,
+    `border-color`). One card holds everything, so it can be placed anywhere and
+    the content always opens directly under the header — the robust way to get
+    "inline below + place anywhere".
+  - set **`hash:`** (no `cards`) → **trigger**: opens a separate `expander-child`
+    with the same hash and shows the accent border while open.
+  The editor exposes the minimalistic visuals + these options + a stack editor
+  for the inline content.
+
 ## [0.13.1] - 2026-06-27
 
 ### Fixed
