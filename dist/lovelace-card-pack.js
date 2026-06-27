@@ -1,11 +1,11 @@
-/*! lovelace-card-pack v0.15.0 | https://github.com/lebrou911-star/lovelace-card-pack */
+/*! lovelace-card-pack v0.16.0 | https://github.com/lebrou911-star/lovelace-card-pack */
 (() => {
   var __defProp = Object.defineProperty;
   var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
   var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
 
   // src/expander-card/expander-card.js
-  var VERSION = "0.23.0";
+  var VERSION = "0.24.0";
   function resolveHeaderWidth(v) {
     if (v == null || v === "" || v === 0 || v === "0") return null;
     if (typeof v === "number") {
@@ -209,7 +209,7 @@
       headerRow.appendChild(headerHolder);
       wrapper.appendChild(headerRow);
       const children = document.createElement("div");
-      children.className = "children" + (this._expanded ? " open" : "");
+      children.className = "children" + (this._visualOpen() ? " open" : "");
       const horizontal = this._config["child-layout"] === "horizontal";
       const nativeGrid = this._config["child-layout"] === "grid";
       const columns = parseInt(this._config.columns, 10) || 0;
@@ -244,7 +244,7 @@
     _applyHeaderBorder() {
       if (!this._headerHolderEl) return;
       const col = this._config && this._config["border-color"];
-      this._headerHolderEl.style.boxShadow = this._expanded && col ? `0 0 0 2px ${col}` : "";
+      this._headerHolderEl.style.boxShadow = this._visualOpen() && col ? `0 0 0 2px ${col}` : "";
     }
     // Walk up the (shadow-piercing) ancestor chain.
     _climb(visit) {
@@ -371,12 +371,25 @@
       el.style.position = "relative";
       el.style.zIndex = "6";
     }
-    _setExpanded(state) {
-      this._expanded = state;
-      if (this._childrenEl) this._childrenEl.classList.toggle("open", state);
-      if (this._chevronEl) this._chevronEl.classList.toggle("open", state);
+    // Storage dashboards add `?edit=1` while editing. Keep the card collapsed then
+    // so the edit view stays compact (children aren't all rendered open).
+    _isEditMode() {
+      return /[?&]edit=1\b/.test(window.location.search);
+    }
+    // Logical expanded state, minus edit mode.
+    _visualOpen() {
+      return this._expanded && !this._isEditMode();
+    }
+    _applyVisual() {
+      const open = this._visualOpen();
+      if (this._childrenEl) this._childrenEl.classList.toggle("open", open);
+      if (this._chevronEl) this._chevronEl.classList.toggle("open", open);
       this._applyHeaderBorder();
       requestAnimationFrame(() => this._applyBreakout());
+    }
+    _setExpanded(state) {
+      this._expanded = state;
+      this._applyVisual();
       this.dispatchEvent(new Event("iron-resize", { bubbles: true, composed: true }));
     }
     _toggle() {
@@ -393,11 +406,18 @@
       if (!this._built && this._config) this._build();
       window.addEventListener("resize", this._onResize);
       window.addEventListener("expander-card:opened", this._onGroupOpen);
+      if (!this._onEditModeChange) this._onEditModeChange = () => this._applyVisual();
+      window.addEventListener("location-changed", this._onEditModeChange);
+      window.addEventListener("popstate", this._onEditModeChange);
       requestAnimationFrame(() => this._applyBreakout());
     }
     disconnectedCallback() {
       window.removeEventListener("resize", this._onResize);
       window.removeEventListener("expander-card:opened", this._onGroupOpen);
+      if (this._onEditModeChange) {
+        window.removeEventListener("location-changed", this._onEditModeChange);
+        window.removeEventListener("popstate", this._onEditModeChange);
+      }
     }
     static getConfigElement() {
       return document.createElement("expander-card-editor");
@@ -1563,7 +1583,7 @@
   };
 
   // src/minimalistic-area-card-plus/minimalistic-area-card-plus.js
-  var VERSION2 = true ? "0.15.0" : "dev";
+  var VERSION2 = true ? "0.16.0" : "dev";
   var CARD_TYPE = "minimalistic-area-card-plus";
   var EDITOR_TYPE = "minimalistic-area-card-plus-editor";
   var UNAVAILABLE = "unavailable";
@@ -2404,7 +2424,7 @@
   );
 
   // src/minimalistic-area-card-extender/minimalistic-area-card-extender.js
-  var VERSION3 = true ? "0.15.0" : "dev";
+  var VERSION3 = true ? "0.16.0" : "dev";
   var CARD_TYPE2 = "minimalistic-area-card-extender";
   var EDITOR_TYPE2 = "minimalistic-area-card-extender-editor";
   var HEADER_EL = "minimalistic-area-card-plus";
@@ -3210,7 +3230,7 @@
   );
 
   // src/index.js
-  var VERSION5 = true ? "0.15.0" : "dev";
+  var VERSION5 = true ? "0.16.0" : "dev";
   console.info(
     `%c LOVELACE-CARD-PACK %c v${VERSION5} `,
     "color: white; background: #6d28d9; font-weight: 700; border-radius: 3px 0 0 3px;",

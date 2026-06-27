@@ -7,7 +7,7 @@
  *
  * License: MIT
  */
-const VERSION = "0.23.0";
+const VERSION = "0.24.0";
 
 // Resolve a header-width value into a CSS max-width.
 // 1..12 -> fraction of 12 columns; a bare number -> px; a CSS string used as-is.
@@ -245,7 +245,7 @@ class ExpanderCard extends HTMLElement {
     wrapper.appendChild(headerRow);
 
     const children = document.createElement("div");
-    children.className = "children" + (this._expanded ? " open" : "");
+    children.className = "children" + (this._visualOpen() ? " open" : "");
     const horizontal = this._config["child-layout"] === "horizontal";
     const nativeGrid = this._config["child-layout"] === "grid";
     const columns = parseInt(this._config.columns, 10) || 0;
@@ -286,7 +286,7 @@ class ExpanderCard extends HTMLElement {
     if (!this._headerHolderEl) return;
     const col = this._config && this._config["border-color"];
     this._headerHolderEl.style.boxShadow =
-      this._expanded && col ? `0 0 0 2px ${col}` : "";
+      this._visualOpen() && col ? `0 0 0 2px ${col}` : "";
   }
 
   // Walk up the (shadow-piercing) ancestor chain.
@@ -436,12 +436,28 @@ class ExpanderCard extends HTMLElement {
     el.style.zIndex = "6";
   }
 
-  _setExpanded(state) {
-    this._expanded = state;
-    if (this._childrenEl) this._childrenEl.classList.toggle("open", state);
-    if (this._chevronEl) this._chevronEl.classList.toggle("open", state);
+  // Storage dashboards add `?edit=1` while editing. Keep the card collapsed then
+  // so the edit view stays compact (children aren't all rendered open).
+  _isEditMode() {
+    return /[?&]edit=1\b/.test(window.location.search);
+  }
+
+  // Logical expanded state, minus edit mode.
+  _visualOpen() {
+    return this._expanded && !this._isEditMode();
+  }
+
+  _applyVisual() {
+    const open = this._visualOpen();
+    if (this._childrenEl) this._childrenEl.classList.toggle("open", open);
+    if (this._chevronEl) this._chevronEl.classList.toggle("open", open);
     this._applyHeaderBorder();
     requestAnimationFrame(() => this._applyBreakout());
+  }
+
+  _setExpanded(state) {
+    this._expanded = state;
+    this._applyVisual();
     this.dispatchEvent(new Event("iron-resize", { bubbles: true, composed: true }));
   }
 
@@ -461,12 +477,20 @@ class ExpanderCard extends HTMLElement {
     if (!this._built && this._config) this._build();
     window.addEventListener("resize", this._onResize);
     window.addEventListener("expander-card:opened", this._onGroupOpen);
+    // Re-apply collapse when entering/leaving dashboard edit mode (?edit=1).
+    if (!this._onEditModeChange) this._onEditModeChange = () => this._applyVisual();
+    window.addEventListener("location-changed", this._onEditModeChange);
+    window.addEventListener("popstate", this._onEditModeChange);
     requestAnimationFrame(() => this._applyBreakout());
   }
 
   disconnectedCallback() {
     window.removeEventListener("resize", this._onResize);
     window.removeEventListener("expander-card:opened", this._onGroupOpen);
+    if (this._onEditModeChange) {
+      window.removeEventListener("location-changed", this._onEditModeChange);
+      window.removeEventListener("popstate", this._onEditModeChange);
+    }
   }
 
   static getConfigElement() {

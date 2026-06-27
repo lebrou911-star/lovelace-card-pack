@@ -3,6 +3,16 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.16.0] - 2026-06-27
+
+### Changed
+- **`expander-card`** (0.24.0) — and therefore `minimalistic-area-card-extender`
+  in self-contained mode — now stays **collapsed while the dashboard is in edit
+  mode** (`?edit=1`), so editing a view no longer renders every child card open
+  (compact edit view). The logical `expanded` state is kept; it just isn't shown
+  open while editing, and re-applies when you leave edit mode. Re-applied live on
+  entering/leaving edit mode.
+
 ## [0.15.0] - 2026-06-27
 
 ### Changed
