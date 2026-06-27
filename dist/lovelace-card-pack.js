@@ -1,4 +1,4 @@
-/*! lovelace-card-pack v0.9.1 | https://github.com/lebrou911-star/lovelace-card-pack */
+/*! lovelace-card-pack v0.10.0 | https://github.com/lebrou911-star/lovelace-card-pack */
 (() => {
   var __defProp = Object.defineProperty;
   var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
@@ -1561,7 +1561,7 @@
   };
 
   // src/minimalistic-area-card-plus/minimalistic-area-card-plus.js
-  var VERSION2 = true ? "0.9.1" : "dev";
+  var VERSION2 = true ? "0.10.0" : "dev";
   var CARD_TYPE = "minimalistic-area-card-plus";
   var EDITOR_TYPE = "minimalistic-area-card-plus-editor";
   var UNAVAILABLE = "unavailable";
@@ -2357,8 +2357,7 @@
   );
 
   // src/expander-pair/expander-pair.js
-  var VERSION3 = "0.4.1";
-  var MDI_CHEVRON_RIGHT = "M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z";
+  var VERSION3 = "0.5.0";
   var MDI_CHEVRON_UP = "M7.41,15.41L12,10.83L16.59,15.41L18,14L12,8L6,14L7.41,15.41Z";
   function normHash(v) {
     if (!v) return "";
@@ -2375,61 +2374,6 @@
     }
     window.dispatchEvent(new Event("location-changed"));
     window.dispatchEvent(new HashChangeEvent("hashchange"));
-  }
-  var ExpanderHeader = class extends HTMLElement {
-    constructor() {
-      super();
-      this.attachShadow({ mode: "open" });
-      this._built = false;
-    }
-    static getConfigElement() {
-      return document.createElement("expander-header-editor");
-    }
-    static getStubConfig() {
-      return { hash: "#popup", title: "Open popup", icon: "mdi:gesture-tap-button" };
-    }
-    setConfig(config) {
-      if (!config || !config.hash) {
-        throw new Error("expander-header: 'hash' is required (e.g. hash: '#garage').");
-      }
-      this._config = config;
-      this._hash = normHash(config.hash);
-      this._built = false;
-      this._build();
-    }
-    set hass(hass) {
-      this._hass = hass;
-    }
-    _build() {
-      if (this._built) return;
-      this.shadowRoot.innerHTML = `
-      <style>
-        ha-card {
-          display: flex; align-items: center; gap: 12px;
-          padding: 14px 16px; cursor: pointer;
-        }
-        ha-card:hover { background: var(--secondary-background-color); }
-        .icon { color: var(--state-icon-color, var(--primary-text-color)); --mdc-icon-size: 24px; }
-        .title { flex: 1; font-weight: 600; font-size: 1.05rem; color: var(--primary-text-color); }
-        .chev { color: var(--secondary-text-color); --mdc-icon-size: 22px; }
-      </style>
-      <ha-card>
-        ${this._config.icon ? `<ha-icon class="icon" icon="${this._config.icon}"></ha-icon>` : ""}
-        <span class="title">${this._config.title || this._hash}</span>
-        <ha-svg-icon class="chev"></ha-svg-icon>
-      </ha-card>
-    `;
-      const chev = this.shadowRoot.querySelector(".chev");
-      if (chev) chev.path = MDI_CHEVRON_RIGHT;
-      this.shadowRoot.querySelector("ha-card").addEventListener("click", () => openHash(this._hash));
-      this._built = true;
-    }
-    getCardSize() {
-      return 1;
-    }
-  };
-  if (!customElements.get("expander-header")) {
-    customElements.define("expander-header", ExpanderHeader);
   }
   var ExpanderChild = class extends HTMLElement {
     constructor() {
@@ -2607,57 +2551,6 @@
   };
   if (!customElements.get("expander-child")) {
     customElements.define("expander-child", ExpanderChild);
-  }
-  var HEADER_SCHEMA = [
-    { name: "hash", selector: { text: {} } },
-    { name: "title", selector: { text: {} } },
-    { name: "icon", selector: { icon: {} } }
-  ];
-  var HEADER_LABELS = {
-    hash: "Hash to open (e.g. #garage) — must match the child",
-    title: "Title",
-    icon: "Icon"
-  };
-  var ExpanderHeaderEditor = class extends HTMLElement {
-    setConfig(config) {
-      this._config = { hash: "#popup", ...config };
-      this._render();
-    }
-    set hass(hass) {
-      this._hass = hass;
-      if (this._form) this._form.hass = hass;
-    }
-    _emit() {
-      this.dispatchEvent(
-        new CustomEvent("config-changed", {
-          detail: { config: this._config },
-          bubbles: true,
-          composed: true
-        })
-      );
-    }
-    _render() {
-      if (this._form) {
-        this._form.data = this._config;
-        return;
-      }
-      this.innerHTML = "";
-      const form = document.createElement("ha-form");
-      form.hass = this._hass;
-      form.data = this._config;
-      form.schema = HEADER_SCHEMA;
-      form.computeLabel = (s) => HEADER_LABELS[s.name] || s.name;
-      form.addEventListener("value-changed", (ev) => {
-        ev.stopPropagation();
-        this._config = { ...this._config, ...ev.detail.value };
-        this._emit();
-      });
-      this._form = form;
-      this.appendChild(form);
-    }
-  };
-  if (!customElements.get("expander-header-editor")) {
-    customElements.define("expander-header-editor", ExpanderHeaderEditor);
   }
   var CHILD_SCHEMA = [
     { name: "hash", selector: { text: {} } },
@@ -2844,26 +2737,15 @@
     customElements.define("expander-child-editor", ExpanderChildEditor);
   }
   window.customCards = window.customCards || [];
-  [
-    {
-      type: "expander-header",
-      name: "Expander Header",
-      description: "The visible button. Tap it to open the matching Expander Child popup (by #hash)."
-    },
-    {
+  if (!window.customCards.some((x) => x.type === "expander-child")) {
+    window.customCards.push({
       type: "expander-child",
       name: "Expander Child",
-      description: "Hidden content that reveals inline (accordion) when its #hash is active. Edited like a stack."
-    }
-  ].forEach((c) => {
-    if (!window.customCards.some((x) => x.type === c.type)) {
-      window.customCards.push({
-        ...c,
-        preview: false,
-        documentationURL: "https://github.com/lebrou911-star/lovelace-card-pack"
-      });
-    }
-  });
+      description: "Hidden content that reveals inline (accordion) when its #hash is active — opened by any card's tap_action: navigate. Edited like a stack.",
+      preview: false,
+      documentationURL: "https://github.com/lebrou911-star/lovelace-card-pack"
+    });
+  }
   console.info(
     `%c expander-pair %c v${VERSION3} `,
     "color:#fff;background:#506eac;border-radius:3px 0 0 3px",
@@ -2871,7 +2753,7 @@
   );
 
   // src/index.js
-  var VERSION4 = true ? "0.9.1" : "dev";
+  var VERSION4 = true ? "0.10.0" : "dev";
   console.info(
     `%c LOVELACE-CARD-PACK %c v${VERSION4} `,
     "color: white; background: #6d28d9; font-weight: 700; border-radius: 3px 0 0 3px;",

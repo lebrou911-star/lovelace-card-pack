@@ -1,30 +1,24 @@
 /**
- * Expander pair — two separate cards that together behave like a Bubble Card
- * pop-up, kept apart on purpose to avoid confusion:
+ * Expander Child — hidden content that reveals INLINE (accordion) when a URL
+ * hash is active, like the original expander (not an overlay).
  *
- *   • <expander-header>  the always-visible button. Tapping it opens the popup
- *                        by navigating to a URL hash (e.g. #garage).
- *   • <expander-child>   the hidden content. Collapsed until the URL hash matches
- *                        its `hash`; then it reveals INLINE (accordion) right
- *                        where it sits, pushing the cards below it down — like
- *                        the original expander, not an overlay. Its content is a
- *                        `cards: []` list, edited exactly like a stack.
+ * Part of lovelace-card-pack. Registers <expander-child> and its visual editor
+ * <expander-child-editor>. The card sits collapsed in the dashboard; when the
+ * URL hash matches its `hash` (e.g. #garage) it expands in place, pushing the
+ * cards below it down. Any card opens it with `tap_action: navigate` to that
+ * hash — so the trigger is just a normal (styled) card, e.g. a
+ * minimalistic-area-card-plus. Tapping the trigger again toggles it shut; the
+ * collapse bar (▲), the browser Back button, and Escape also collapse it.
  *
- * Link the two by giving them the same `hash`. The collapse bar (▲), the browser
- * Back button, or Escape collapses the child.
+ * Its content is a `cards: []` list, edited exactly like a stack.
  *
  * Self-contained vanilla JS module imported for its side effects by src/index.js.
  *
  * License: MIT
  */
-const VERSION = "0.4.1";
+const VERSION = "0.5.0";
 
-const MDI_CHEVRON_RIGHT = "M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z";
 const MDI_CHEVRON_UP = "M7.41,15.41L12,10.83L16.59,15.41L18,14L12,8L6,14L7.41,15.41Z";
-const MDI_CODE_BRACES =
-  "M8,3A2,2 0 0,0 6,5V9A2,2 0 0,1 4,11H3V13H4A2,2 0 0,1 6,15V19A2,2 0 0,0 8,21H10V19H8V14A2,2 0 0,0 6,12A2,2 0 0,0 8,10V5H10V3M16,3A2,2 0 0,1 18,5V9A2,2 0 0,0 20,11H21V13H20A2,2 0 0,1 18,15V19A2,2 0 0,1 16,21H14V19H16V14A2,2 0 0,1 18,12A2,2 0 0,1 16,10V5H14V3H16Z";
-const MDI_DELETE =
-  "M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z";
 
 // Normalise a hash value to a leading-# anchor (e.g. "garage" -> "#garage").
 function normHash(v) {
@@ -50,74 +44,7 @@ function openHash(hash) {
 }
 
 // ---------------------------------------------------------------------------
-// <expander-header> — the visible trigger button
-// ---------------------------------------------------------------------------
-
-class ExpanderHeader extends HTMLElement {
-  constructor() {
-    super();
-    this.attachShadow({ mode: "open" });
-    this._built = false;
-  }
-
-  static getConfigElement() {
-    return document.createElement("expander-header-editor");
-  }
-
-  static getStubConfig() {
-    return { hash: "#popup", title: "Open popup", icon: "mdi:gesture-tap-button" };
-  }
-
-  setConfig(config) {
-    if (!config || !config.hash) {
-      throw new Error("expander-header: 'hash' is required (e.g. hash: '#garage').");
-    }
-    this._config = config;
-    this._hash = normHash(config.hash);
-    this._built = false;
-    this._build();
-  }
-
-  set hass(hass) {
-    this._hass = hass;
-  }
-
-  _build() {
-    if (this._built) return;
-    this.shadowRoot.innerHTML = `
-      <style>
-        ha-card {
-          display: flex; align-items: center; gap: 12px;
-          padding: 14px 16px; cursor: pointer;
-        }
-        ha-card:hover { background: var(--secondary-background-color); }
-        .icon { color: var(--state-icon-color, var(--primary-text-color)); --mdc-icon-size: 24px; }
-        .title { flex: 1; font-weight: 600; font-size: 1.05rem; color: var(--primary-text-color); }
-        .chev { color: var(--secondary-text-color); --mdc-icon-size: 22px; }
-      </style>
-      <ha-card>
-        ${this._config.icon ? `<ha-icon class="icon" icon="${this._config.icon}"></ha-icon>` : ""}
-        <span class="title">${this._config.title || this._hash}</span>
-        <ha-svg-icon class="chev"></ha-svg-icon>
-      </ha-card>
-    `;
-    const chev = this.shadowRoot.querySelector(".chev");
-    if (chev) chev.path = MDI_CHEVRON_RIGHT;
-    this.shadowRoot.querySelector("ha-card").addEventListener("click", () => openHash(this._hash));
-    this._built = true;
-  }
-
-  getCardSize() {
-    return 1;
-  }
-}
-
-if (!customElements.get("expander-header")) {
-  customElements.define("expander-header", ExpanderHeader);
-}
-
-// ---------------------------------------------------------------------------
-// <expander-child> — the popup content
+// <expander-child> — the hidden, inline-revealing content
 // ---------------------------------------------------------------------------
 
 class ExpanderChild extends HTMLElement {
@@ -329,59 +256,6 @@ if (!customElements.get("expander-child")) {
 // Editors
 // ---------------------------------------------------------------------------
 
-const HEADER_SCHEMA = [
-  { name: "hash", selector: { text: {} } },
-  { name: "title", selector: { text: {} } },
-  { name: "icon", selector: { icon: {} } },
-];
-const HEADER_LABELS = {
-  hash: "Hash to open (e.g. #garage) — must match the child",
-  title: "Title",
-  icon: "Icon",
-};
-
-class ExpanderHeaderEditor extends HTMLElement {
-  setConfig(config) {
-    this._config = { hash: "#popup", ...config };
-    this._render();
-  }
-  set hass(hass) {
-    this._hass = hass;
-    if (this._form) this._form.hass = hass;
-  }
-  _emit() {
-    this.dispatchEvent(
-      new CustomEvent("config-changed", {
-        detail: { config: this._config },
-        bubbles: true,
-        composed: true,
-      })
-    );
-  }
-  _render() {
-    if (this._form) {
-      this._form.data = this._config;
-      return;
-    }
-    this.innerHTML = "";
-    const form = document.createElement("ha-form");
-    form.hass = this._hass;
-    form.data = this._config;
-    form.schema = HEADER_SCHEMA;
-    form.computeLabel = (s) => HEADER_LABELS[s.name] || s.name;
-    form.addEventListener("value-changed", (ev) => {
-      ev.stopPropagation();
-      this._config = { ...this._config, ...ev.detail.value };
-      this._emit();
-    });
-    this._form = form;
-    this.appendChild(form);
-  }
-}
-if (!customElements.get("expander-header-editor")) {
-  customElements.define("expander-header-editor", ExpanderHeaderEditor);
-}
-
 const CHILD_SCHEMA = [
   { name: "hash", selector: { text: {} } },
   { name: "title", selector: { text: {} } },
@@ -584,27 +458,16 @@ if (!customElements.get("expander-child-editor")) {
 }
 
 window.customCards = window.customCards || [];
-[
-  {
-    type: "expander-header",
-    name: "Expander Header",
-    description: "The visible button. Tap it to open the matching Expander Child popup (by #hash).",
-  },
-  {
+if (!window.customCards.some((x) => x.type === "expander-child")) {
+  window.customCards.push({
     type: "expander-child",
     name: "Expander Child",
     description:
-      "Hidden content that reveals inline (accordion) when its #hash is active. Edited like a stack.",
-  },
-].forEach((c) => {
-  if (!window.customCards.some((x) => x.type === c.type)) {
-    window.customCards.push({
-      ...c,
-      preview: false,
-      documentationURL: "https://github.com/lebrou911-star/lovelace-card-pack",
-    });
-  }
-});
+      "Hidden content that reveals inline (accordion) when its #hash is active — opened by any card's tap_action: navigate. Edited like a stack.",
+    preview: false,
+    documentationURL: "https://github.com/lebrou911-star/lovelace-card-pack",
+  });
+}
 
 console.info(
   `%c expander-pair %c v${VERSION} `,

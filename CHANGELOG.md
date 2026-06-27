@@ -3,6 +3,15 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.10.0] - 2026-06-27
+
+### Removed
+- **`custom:expander-header`** is dropped. It is unnecessary: any normal (styled)
+  card — e.g. a `minimalistic-area-card-plus` — opens the child via
+  `tap_action: { action: navigate, navigation_path: "#hash" }`, and that card
+  keeps its own border/colour/image styling. The pack now ships a single
+  `custom:expander-child` (expander-pair 0.5.0); its runtime/editor are unchanged.
+
 ## [0.9.1] - 2026-06-27
 
 ### Fixed
